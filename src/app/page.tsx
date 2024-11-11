@@ -1,6 +1,6 @@
 "use client";
 import { useSession, signIn } from "next-auth/react";
-import FractalLanding from '../components/MandelbrotSet';
+import FractalLanding from "../components/MandelbrotSet";
 
 export default function Home() {
   const { data: session, status } = useSession();
