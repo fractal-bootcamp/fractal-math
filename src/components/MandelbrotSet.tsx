@@ -14,8 +14,8 @@ const FractalLanding = () => {
 
     const generateFractalPoints = () => {
         const points = [];
-        const maxIterations = 150;
-        const scale = 15 + Math.sin(time * 0.02) * 2;
+        const maxIterations = 225;
+        const scale = 22 + Math.sin(time * 0.02) * 3;
 
         for (let i = 0; i < maxIterations; i++) {
             const angle = (i * 137.5 + time * 0.5) * (Math.PI / 180);
@@ -63,7 +63,7 @@ const FractalLanding = () => {
                                 key={index}
                                 cx={centerX + point.x}
                                 cy={centerY + point.y}
-                                r={4 + Math.sin(time * 0.05 + index * 0.1) * 2}
+                                r={3 + Math.sin(time * 0.05 + index * 0.1) * 1.5}
                                 fill={getColor(index)}
                                 className="transition-all duration-500 ease-in-out"
                             />
