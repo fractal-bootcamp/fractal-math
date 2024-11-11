@@ -1,0 +1,56 @@
+// prisma/schema.prisma
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// Core Models
+model Category {
+    id          String  @id @default(cuid())
+    name        String
+    description String
+    curves      Curve[]
+}
+
+model Curve {
+    id           String         @id @default(cuid())
+    name         String
+    wolframId    String         @unique // For Wolfram Alpha API integration
+    description  String
+    category     Category       @relation(fields: [categoryId], references: [id])
+    categoryId   String
+    equations    Json // Store equations array as JSON initially
+    parameters   Json // Store parameters array as JSON initially
+    userProgress UserProgress[]
+
+    @@index([categoryId])
+}
+
+// Basic User Progress
+model User {
+    id       String         @id @default(cuid())
+    email    String         @unique
+    progress UserProgress[]
+}
+
+model UserProgress {
+    id        String         @id @default(cuid())
+    user      User           @relation(fields: [userId], references: [id])
+    userId    String
+    curve     Curve          @relation(fields: [curveId], references: [id])
+    curveId   String
+    status    ProgressStatus @default(NOT_STARTED)
+    updatedAt DateTime       @updatedAt
+
+    @@unique([userId, curveId])
+}
+
+enum ProgressStatus {
+    NOT_STARTED
+    IN_PROGRESS
+    COMPLETED
+}
