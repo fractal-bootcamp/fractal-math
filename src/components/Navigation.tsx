@@ -19,6 +19,11 @@ const Navigation = () => {
                         <Link href="/about" className="text-gray-300 hover:text-white transition-colors">
                             About
                         </Link>
+                        {status === "authenticated" && (
+                            <Link href="/learn" className="text-gray-300 hover:text-white transition-colors">
+                                Learn
+                            </Link>
+                        )}
                         {status === "authenticated" ? (
                             <div className="flex items-center space-x-4">
                                 <span className="text-gray-300">{session.user?.name}</span>
