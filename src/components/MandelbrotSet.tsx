@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 const FractalLanding = () => {
     const [time, setTime] = useState(0);
@@ -100,10 +101,13 @@ const FractalLanding = () => {
             </div>
 
             {/* Call to Action */}
-            <div className="container mx-auto px-4 py-16 text-center">
+            <div className="container mx-auto px-4 py-16 text-center space-x-4">
                 <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300">
                     Begin Your Journey
                 </button>
+                <Link href="/about" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300 inline-block">
+                    About Us
+                </Link>
             </div>
         </div>
     );
