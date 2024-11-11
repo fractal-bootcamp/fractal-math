@@ -1,51 +1,41 @@
 "use client";
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 
-const MandelbrotSet = () => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-
-    const drawMandelbrot = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-        const maxIterations = 100;
-        for (let x = 0; x < width; x++) {
-            for (let y = 0; y < height; y++) {
-                let a = (x - width / 2) * 4 / width;
-                let b = (y - height / 2) * 4 / height;
-                const ca = a;
-                const cb = b;
-                let n = 0;
-                while (n < maxIterations) {
-                    const aa = a * a - b * b;
-                    const bb = 2 * a * b;
-                    a = aa + ca;
-                    b = bb + cb;
-                    if (a * a + b * b > 16) {
-                        break;
-                    }
-                    n++;
-                }
-                const hue = n === maxIterations ? 0 : (n * 360 / maxIterations);
-                ctx.fillStyle = n === maxIterations ? 'black' : `hsl(${hue}, 100%, 50%)`;
-                ctx.fillRect(x, y, 1, 1);
-            }
-        }
-    };
+const FractalLanding = () => {
+    const [time, setTime] = useState(0);
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        const size = Math.min(window.innerWidth * 0.8, window.innerHeight * 0.8);
-        canvas.width = size;
-        canvas.height = size;
-        drawMandelbrot(ctx, size, size);
+        const interval = setInterval(() => {
+            setTime(prev => (prev + 0.5) % 360);
+        }, 50);
+        return () => clearInterval(interval);
     }, []);
 
-    return <canvas ref={canvasRef} className="rounded-lg shadow-lg" />;
-};
+    const generateFractalPoints = () => {
+        const points = [];
+        const maxIterations = 225;
+        const scale = 22 + Math.sin(time * 0.02) * 3;
 
-const FractalLandingPage = () => {
+        for (let i = 0; i < maxIterations; i++) {
+            const angle = (i * 137.5 + time * 0.5) * (Math.PI / 180);
+            const radius = Math.sqrt(i) * scale;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            points.push({ x, y });
+        }
+        return points;
+    };
+
+    const getColor = (index: number) => {
+        const hue = (time * 0.5 + index) % 360;
+        return `hsl(${hue}, 70%, 50%)`;
+    };
+
+    const points = generateFractalPoints();
+    const centerX = 400;
+    const centerY = 300;
+
     return (
         <div className="min-h-screen bg-black text-white">
             {/* Hero Section */}
@@ -60,11 +50,25 @@ const FractalLandingPage = () => {
                 </div>
             </div>
 
-            {/* Mandelbrot Visualization */}
+            {/* Fractal Visualization */}
             <div className="flex justify-center items-center mb-16">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg filter blur-xl"></div>
-                    <MandelbrotSet />
+                <div className="relative w-full max-w-3xl aspect-[4/3]">
+                    <svg
+                        className="w-full h-full"
+                        viewBox="0 0 800 600"
+                        preserveAspectRatio="xMidYMid slice"
+                    >
+                        {points.map((point, index) => (
+                            <circle
+                                key={index}
+                                cx={centerX + point.x}
+                                cy={centerY + point.y}
+                                r={3 + Math.sin(time * 0.05 + index * 0.1) * 1.5}
+                                fill={getColor(index)}
+                                className="transition-all duration-500 ease-in-out"
+                            />
+                        ))}
+                    </svg>
                 </div>
             </div>
 
@@ -97,13 +101,16 @@ const FractalLandingPage = () => {
             </div>
 
             {/* Call to Action */}
-            <div className="container mx-auto px-4 py-16 text-center">
+            <div className="container mx-auto px-4 py-16 text-center space-x-4">
                 <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300">
                     Begin Your Journey
                 </button>
+                <Link href="/about" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300 inline-block">
+                    About Us
+                </Link>
             </div>
         </div>
     );
 };
 
-export default FractalLandingPage;
+export default FractalLanding;
