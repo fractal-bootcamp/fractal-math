@@ -16,26 +16,38 @@ interface LinkData {
     target: string;
 }
 
+// Add these interfaces for d3 types
+// interface SimulationLink extends d3.SimulationLinkDatum<NodeData> {
+//     source: NodeData;
+//     target: NodeData;
+// }
+
+interface DragEvent extends d3.D3DragEvent<SVGGElement, NodeData, NodeData> {
+    subject: NodeData;
+}
+
 export default function ConceptFlow() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
 
-    const initialNodes: NodeData[] = [
-        { id: "1", label: "Pythagorean Theorem", comfort: null },
-        { id: "2", label: "Right Triangles", comfort: null },
-        { id: "3", label: "Square Numbers", comfort: null },
-        { id: "4", label: "Distance Formula", comfort: null },
-        { id: "5", label: "Trigonometry", comfort: null },
-    ];
-
-    const initialLinks: LinkData[] = [
-        { source: "2", target: "1" },
-        { source: "3", target: "1" },
-        { source: "1", target: "4" },
-        { source: "1", target: "5" },
-    ];
-
+    // Move these inside useEffect to avoid the dependency warning
+    // while maintaining the exact same functionality
     useEffect(() => {
+        const initialNodes: NodeData[] = [
+            { id: "1", label: "Pythagorean Theorem", comfort: null },
+            { id: "2", label: "Right Triangles", comfort: null },
+            { id: "3", label: "Square Numbers", comfort: null },
+            { id: "4", label: "Distance Formula", comfort: null },
+            { id: "5", label: "Trigonometry", comfort: null },
+        ];
+
+        const initialLinks: LinkData[] = [
+            { source: "2", target: "1" },
+            { source: "3", target: "1" },
+            { source: "1", target: "4" },
+            { source: "1", target: "5" },
+        ];
+
         if (!containerRef.current) return;
 
         d3.select(containerRef.current).selectAll("svg").remove();
@@ -55,6 +67,8 @@ export default function ConceptFlow() {
                 "link",
                 d3
                     .forceLink(initialLinks)
+                    // Allow any: d3's force layout internal node structure doesn't align cleanly with our NodeData type
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     .id((d: any) => d.id)
                     .distance(150)
             )
@@ -67,7 +81,7 @@ export default function ConceptFlow() {
             .selectAll("line")
             .data(initialLinks)
             .join("line")
-            .attr("stroke", (d) => (["2", "3"].includes(d.source) ? "#ff6b6b" : "#69db7c"))
+            .attr("stroke", (d) => (["2", "3"].includes(d.source as string) ? "#ff6b6b" : "#69db7c"))
             .attr("stroke-width", 2);
 
         const nodes = svg.append("g").selectAll("g").data(initialNodes).join("g");
@@ -76,7 +90,8 @@ export default function ConceptFlow() {
             .append("circle")
             .attr("r", 30)
             .attr("fill", "#4a6fa5")
-            .on("click", (event, d) => setSelectedConcept(d.id));
+            .attr("data-id", d => d.id)
+            .on("click", (_event, d) => setSelectedConcept(d.id));
 
         nodes
             .append("text")
@@ -87,6 +102,8 @@ export default function ConceptFlow() {
 
         nodes.call(
             d3
+                // Allow any: d3's drag behavior works with various element types, strict typing adds unnecessary complexity
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .drag<any, NodeData>()
                 .on("start", dragstarted)
                 .on("drag", dragged)
@@ -95,31 +112,43 @@ export default function ConceptFlow() {
 
         simulation.on("tick", () => {
             links
-                .attr("x1", (d: any) => d.source.x)
-                .attr("y1", (d: any) => d.source.y)
-                .attr("x2", (d: any) => d.target.x)
-                .attr("y2", (d: any) => d.target.y);
+                .attr("x1", (d) => {
+                    const source = d.source as unknown as NodeData;
+                    return source.x!;
+                })
+                .attr("y1", (d) => {
+                    const source = d.source as unknown as NodeData;
+                    return source.y!;
+                })
+                .attr("x2", (d) => {
+                    const target = d.target as unknown as NodeData;
+                    return target.x!;
+                })
+                .attr("y2", (d) => {
+                    const target = d.target as unknown as NodeData;
+                    return target.y!;
+                });
 
-            nodes.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+            nodes.attr("transform", (d: NodeData) => `translate(${d.x},${d.y})`);
         });
 
-        function dragstarted(event: any) {
+        function dragstarted(event: DragEvent) {
             if (!event.active) simulation.alphaTarget(0.3).restart();
             event.subject.fx = event.subject.x;
             event.subject.fy = event.subject.y;
         }
 
-        function dragged(event: any) {
+        function dragged(event: DragEvent) {
             event.subject.fx = event.x;
             event.subject.fy = event.y;
         }
 
-        function dragended(event: any) {
+        function dragended(event: DragEvent) {
             if (!event.active) simulation.alphaTarget(0);
             event.subject.fx = null;
             event.subject.fy = null;
         }
-    }, []);
+    }, []); // Empty dependency array since all data is now internal to the effect
 
     const handleConceptComplete = (conceptId: string) => {
         setSelectedConcept(null);
