@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
+import ConceptCards from './ConceptCards.tsx';
 
 interface NodeData extends d3.SimulationNodeDatum {
     id: string
@@ -15,6 +16,7 @@ interface LinkData {
 
 export default function ConceptFlow() {
     const containerRef = useRef<HTMLDivElement>(null)
+    const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
 
     const initialNodes: NodeData[] = [
         { id: '1', label: 'Pythagorean Theorem', comfort: null },
@@ -74,18 +76,8 @@ export default function ConceptFlow() {
         nodes.append('circle')
             .attr('r', 30)
             .attr('fill', '#4a6fa5')
-            .on('click', function (d) {
-                const node = d3.select(this)
-                if (!d.comfort) {
-                    node.attr('stroke', '#4CAF50').attr('stroke-width', 4)
-                    d.comfort = true
-                } else if (d.comfort) {
-                    node.attr('stroke', '#F44336').attr('stroke-width', 4)
-                    d.comfort = false
-                } else {
-                    node.attr('stroke', 'none')
-                    d.comfort = null
-                }
+            .on('click', function (event, d) {
+                setSelectedConcept(d.id);
             })
 
         // Add labels
@@ -131,5 +123,24 @@ export default function ConceptFlow() {
 
     }, [])
 
-    return <div ref={containerRef} className="w-full h-full" />
+    const handleConceptComplete = (conceptId: string) => {
+        setSelectedConcept(null);
+        // Update the node's comfort level
+        const node = d3.select(`circle[data-id="${conceptId}"]`);
+        node.attr('stroke', '#4CAF50').attr('stroke-width', 4);
+    };
+
+    return (
+        <div className="relative w-full h-full">
+            <div ref={containerRef} className="w-full h-full" />
+            {selectedConcept && (
+                <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center p-4">
+                    <ConceptCards
+                        conceptId={selectedConcept}
+                        onComplete={handleConceptComplete}
+                    />
+                </div>
+            )}
+        </div>
+    );
 } 
