@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient();
+
 async function main() {
   // Create a test category
   const category = await prisma.category.create({
@@ -16,20 +18,25 @@ async function main() {
       wolframId: "Circle",
       description: "A perfect circle",
       categoryId: category.id,
-      parameters: JSON.stringify([
-        {
+      parameters: {
+        radius: {
           name: "radius",
           symbol: "r",
           defaultValue: "1",
           range: [0.1, 10],
         },
-      ]),
-      equations: JSON.stringify([
-        {
-          type: "cartesian",
-          expression: "x² + y² = r²",
+        center: {
+          x: 0,
+          y: 0,
         },
-      ]),
+      },
+      equations: {
+        cartesian: "x² + y² = r²",
+        parametric: {
+          x: "r * cos(t)",
+          y: "r * sin(t)",
+        },
+      },
     },
   });
 }
