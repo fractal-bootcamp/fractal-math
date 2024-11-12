@@ -21,13 +21,8 @@
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "react-p5": "^1.4.1",
-<<<<<<< HEAD
     "reactflow": "^11.11.4",
     "tailwind-merge": "^2.5.4"
-=======
-
-    "reactflow": "^11.11.4"
->>>>>>> 1a15391888d4ed25bc5a14c731e089bd4c4ebe84
   },
   "devDependencies": {
     "@shadcn/ui": "^0.0.4",
