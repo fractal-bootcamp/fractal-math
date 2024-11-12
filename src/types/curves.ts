@@ -30,5 +30,5 @@ export interface Equation {
 
 // Simple response type for API
 export interface CurveResponse extends CurveInfo {
-  wolframData?: any;
+  wolframData?: unknown; // This is temporary for now
 }
