@@ -35,7 +35,6 @@ interface WolframData {
   };
   // Add other specific properties that Wolfram returns
 }
-
 // Simple response type for API
 export interface CurveResponse extends CurveInfo {
   wolframData?: WolframData;
