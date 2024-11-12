@@ -12,6 +12,7 @@
     "@auth/core": "^0.37.3",
     "@auth/prisma-adapter": "^2.7.3",
     "@prisma/client": "^5.22.0",
+    "d3": "^7.9.0",
     "mathbox": "^2.3.2-rc1",
     "next": "15.0.3",
     "next-auth": "^4.24.10",
