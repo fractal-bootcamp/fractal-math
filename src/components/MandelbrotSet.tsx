@@ -24,11 +24,11 @@ const FractalLanding = () => {
       const radius = Math.sqrt(i) * baseScale * 0.2; // Reduced multiplier for better spread
 
       // Create more fluid spread using sine waves
-      let x =
+      const x =
         Math.cos(angle) * radius * (1 + Math.sin(time * 0.03 + i * 0.1) * 0.3);
-      let y =
+      const y =
         Math.sin(angle) * radius * (1 + Math.cos(time * 0.03 + i * 0.1) * 0.3);
-      let z = radius * 0.5 * Math.sin(time * 0.02 + i * 0.05); // More dynamic z movement
+      const z = radius * 0.5 * Math.sin(time * 0.02 + i * 0.05); // More dynamic z movement
 
       // Apply Z rotation
       const zRotation = time * 0.02;
