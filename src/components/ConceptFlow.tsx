@@ -1,125 +1,135 @@
 "use client";
-import { useCallback } from 'react';
-import ReactFlow, {
-    Node,
-    Edge,
-    addEdge,
-    Connection,
-    useNodesState,
-    useEdgesState,
-    Controls,
-    Background,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+import { useEffect, useRef } from 'react'
+import * as d3 from 'd3'
 
-// Add type for node data
-interface NodeData {
-    label: string;
-    comfort: boolean | null;
+interface NodeData extends d3.SimulationNodeDatum {
+    id: string
+    label: string
+    comfort: boolean | null
 }
 
-const initialNodes: Node<NodeData>[] = [
-    {
-        id: '1',
-        type: 'default',
-        data: {
-            label: 'Geometry',
-            comfort: null
-        },
-        position: { x: 250, y: 0 },
-        className: 'bg-blue-500 rounded-lg'
-    },
-    {
-        id: '2',
-        type: 'default',
-        data: {
-            label: 'Triangles',
-            comfort: null
-        },
-        position: { x: 100, y: 100 },
-        className: 'bg-purple-500 rounded-lg'
-    },
-    {
-        id: '3',
-        type: 'default',
-        data: {
-            label: 'Circles',
-            comfort: null
-        },
-        position: { x: 400, y: 100 },
-        className: 'bg-green-500 rounded-lg'
-    },
-    {
-        id: '4',
-        type: 'default',
-        data: {
-            label: 'Pythagorean Theorem',
-            comfort: null
-        },
-        position: { x: 100, y: 200 },
-        className: 'bg-yellow-500 rounded-lg'
-    },
-    {
-        id: '5',
-        type: 'default',
-        data: {
-            label: 'Circle Properties',
-            comfort: null
-        },
-        position: { x: 400, y: 200 },
-        className: 'bg-red-500 rounded-lg'
-    },
-];
-
-const initialEdges: Edge[] = [
-    { id: 'e1-2', source: '1', target: '2' },
-    { id: 'e1-3', source: '1', target: '3' },
-    { id: 'e2-4', source: '2', target: '4' },
-    { id: 'e3-5', source: '3', target: '5' },
-];
+interface LinkData {
+    source: string
+    target: string
+}
 
 export default function ConceptFlow() {
-    const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const containerRef = useRef<HTMLDivElement>(null)
 
-    const onConnect = useCallback(
-        (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-        [setEdges],
-    );
+    const initialNodes: NodeData[] = [
+        { id: '1', label: 'Pythagorean Theorem', comfort: null },
+        { id: '2', label: 'Right Triangles', comfort: null },
+        { id: '3', label: 'Square Numbers', comfort: null },
+        { id: '4', label: 'Distance Formula', comfort: null },
+        { id: '5', label: 'Trigonometry', comfort: null },
+    ]
 
-    const onNodeClick = useCallback((event: React.MouseEvent, node: Node<NodeData>) => {
-        setNodes((nds) =>
-            nds.map((n) => {
-                if (n.id === node.id) {
-                    const comfort = n.data.comfort === null ? true :
-                        n.data.comfort === true ? false : null;
-                    const baseClass = n.className?.split(' ')[0] || '';
-                    return {
-                        ...n,
-                        className: `${baseClass} rounded-lg ${comfort === true ? 'border-4 border-green-300' :
-                            comfort === false ? 'border-4 border-red-300' :
-                                ''
-                            }`,
-                        data: { ...n.data, comfort }
-                    };
-                }
-                return n;
+    const initialLinks: LinkData[] = [
+        { source: '2', target: '1' },
+        { source: '3', target: '1' },
+        { source: '1', target: '4' },
+        { source: '1', target: '5' },
+    ]
+
+    useEffect(() => {
+        if (!containerRef.current) return
+
+        // Clear any existing SVG
+        d3.select(containerRef.current).selectAll('svg').remove()
+
+        const width = containerRef.current.offsetWidth || 800
+        const height = containerRef.current.offsetHeight || 600
+
+        // Create SVG
+        const svg = d3.select(containerRef.current)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+
+        // Create force simulation with adjusted parameters
+        const simulation = d3.forceSimulation(initialNodes)
+            .force('link', d3.forceLink(initialLinks).id((d: any) => d.id).distance(150))
+            .force('charge', d3.forceManyBody().strength(-1000))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collision', d3.forceCollide().radius(80))
+
+        // Draw links
+        const links = svg.append('g')
+            .selectAll('line')
+            .data(initialLinks)
+            .join('line')
+            .attr('stroke', (d) => {
+                const isPrerequisite = ['2', '3'].includes(d.source)
+                return isPrerequisite ? '#ff6b6b' : '#69db7c'
             })
-        );
-    }, [setNodes]);
+            .attr('stroke-width', 2)
 
-    return (
-        <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            fitView
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-        >
-            <Controls />
-            <Background />
-        </ReactFlow>
-    );
+        // Draw nodes
+        const nodes = svg.append('g')
+            .selectAll('g')
+            .data(initialNodes)
+            .join('g')
+
+        // Add circles to nodes
+        nodes.append('circle')
+            .attr('r', 30)
+            .attr('fill', '#4a6fa5')
+            .on('click', function (d) {
+                const node = d3.select(this)
+                if (!d.comfort) {
+                    node.attr('stroke', '#4CAF50').attr('stroke-width', 4)
+                    d.comfort = true
+                } else if (d.comfort) {
+                    node.attr('stroke', '#F44336').attr('stroke-width', 4)
+                    d.comfort = false
+                } else {
+                    node.attr('stroke', 'none')
+                    d.comfort = null
+                }
+            })
+
+        // Add labels
+        nodes.append('text')
+            .text(d => d.label)
+            .attr('text-anchor', 'middle')
+            .attr('dy', '.35em')
+            .attr('fill', 'white')
+
+        // Add drag behavior
+        nodes.call(d3.drag<any, NodeData>()
+            .on('start', dragstarted)
+            .on('drag', dragged)
+            .on('end', dragended))
+
+        // Update positions on simulation tick
+        simulation.on('tick', () => {
+            links
+                .attr('x1', (d: any) => d.source.x)
+                .attr('y1', (d: any) => d.source.y)
+                .attr('x2', (d: any) => d.target.x)
+                .attr('y2', (d: any) => d.target.y)
+
+            nodes.attr('transform', (d: any) => `translate(${d.x},${d.y})`)
+        })
+
+        function dragstarted(event: any) {
+            if (!event.active) simulation.alphaTarget(0.3).restart()
+            event.subject.fx = event.subject.x
+            event.subject.fy = event.subject.y
+        }
+
+        function dragged(event: any) {
+            event.subject.fx = event.x
+            event.subject.fy = event.y
+        }
+
+        function dragended(event: any) {
+            if (!event.active) simulation.alphaTarget(0)
+            event.subject.fx = null
+            event.subject.fy = null
+        }
+
+    }, [])
+
+    return <div ref={containerRef} className="w-full h-full" />
 } 
