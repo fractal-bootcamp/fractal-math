@@ -28,7 +28,14 @@ export interface Equation {
   expression: string;
 }
 
+interface WolframData {
+  plots?: {
+    points: Array<{ x: number; y: number }>;
+    range?: { xmin: number; xmax: number; ymin: number; ymax: number };
+  };
+  // Add other specific properties that Wolfram returns
+}
 // Simple response type for API
 export interface CurveResponse extends CurveInfo {
-  wolframData?: unknown; // This is temporary for now
+  wolframData?: WolframData;
 }

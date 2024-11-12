@@ -8,6 +8,34 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+model Account {
+    id                String  @id @default(cuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String? @db.Text
+    access_token      String? @db.Text
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String? @db.Text
+    session_state     String?
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 // Core Models
 model Category {
     id          String  @id @default(cuid())
@@ -17,36 +45,101 @@ model Category {
 }
 
 model Curve {
-    id           String         @id @default(cuid())
-    name         String
-    wolframId    String         @unique // For Wolfram Alpha API integration
-    description  String
-    category     Category       @relation(fields: [categoryId], references: [id])
-    categoryId   String
-    equations    Json // Store equations array as JSON initially
-    parameters   Json // Store parameters array as JSON initially
-    userProgress UserProgress[]
+    id             String                @id @default(cuid())
+    name           String
+    wolframId      String                @unique // For Wolfram Alpha API integration
+    description    String
+    category       Category              @relation(fields: [categoryId], references: [id])
+    categoryId     String
+    equations      Json // Store equations array as JSON initially
+    parameters     Json // Store parameters array as JSON initially
+    visualizations VisualizationConfig[]
+    userProgress   UserProgress[]
+    pathSteps      PathStep[] // for learning paths
 
     @@index([categoryId])
+    @@index([wolframId]) // for wolfram lookups 
 }
 
-// Basic User Progress
 model User {
     id       String         @id @default(cuid())
-    email    String         @unique
+    name     String?
+    email    String?        @unique
+    image    String?
+    accounts Account[]
+    sessions Session[]
     progress UserProgress[]
 }
 
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
 model UserProgress {
-    id        String         @id @default(cuid())
-    user      User           @relation(fields: [userId], references: [id])
-    userId    String
-    curve     Curve          @relation(fields: [curveId], references: [id])
-    curveId   String
-    status    ProgressStatus @default(NOT_STARTED)
-    updatedAt DateTime       @updatedAt
+    id                String         @id @default(cuid())
+    user              User           @relation(fields: [userId], references: [id])
+    userId            String
+    curve             Curve          @relation(fields: [curveId], references: [id])
+    curveId           String
+    pathStep          PathStep?      @relation(fields: [pathStepId], references: [id])
+    pathStepId        String?
+    status            ProgressStatus @default(NOT_STARTED)
+    currentVisualStep Int            @default(0)
+    updatedAt         DateTime       @updatedAt
 
     @@unique([userId, curveId])
+    @@index([userId])
+    @@index([curveId])
+}
+
+model VisualizationConfig {
+    id           String              @id @default(cuid())
+    curve        Curve               @relation(fields: [curveId], references: [id])
+    curveId      String              @unique
+    initialState Json // initial state of the visualization
+    totalSteps   Int // total number of steps in the visualization
+    steps        VisualizationStep[]
+    createdAt    DateTime            @default(now())
+    updatedAt    DateTime            @updatedAt
+}
+
+model VisualizationStep {
+    id              String              @id @default(cuid())
+    config          VisualizationConfig @relation(fields: [configId], references: [id])
+    configId        String
+    stepNumber      Int
+    description     String
+    transformations Json // param changes for this step
+    highlightPoints Json // points to highlight for this step
+
+    @@unique([configId, stepNumber]) // Ensures each step number is unique within a visualization config
+}
+
+model LearningPath {
+    id          String     @id @default(cuid())
+    name        String
+    description String
+    difficulty  Int        @default(1)
+    steps       PathStep[]
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+}
+
+model PathStep {
+    id                 String         @id @default(cuid())
+    path               LearningPath   @relation(fields: [pathId], references: [id])
+    pathId             String
+    curve              Curve          @relation(fields: [curveId], references: [id])
+    curveId            String
+    stepNumber         Int
+    conceptDescription String
+    userProgress       UserProgress[]
+
+    @@unique([pathId, stepNumber])
 }
 
 enum ProgressStatus {
