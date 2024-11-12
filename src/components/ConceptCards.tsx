@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface Step {
     id: string;
@@ -39,6 +39,20 @@ export default function ConceptCards({ conceptId, steps = sampleSteps, onComplet
     const [currentStep, setCurrentStep] = useState(0);
     const [userInput, setUserInput] = useState('');
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+                onComplete(conceptId);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [conceptId, onComplete]);
 
     const handleNext = () => {
         if (currentStep < steps.length - 1) {
@@ -72,7 +86,7 @@ export default function ConceptCards({ conceptId, steps = sampleSteps, onComplet
     const step = steps[currentStep];
 
     return (
-        <div className="bg-gray-800 rounded-lg p-6 max-w-2xl mx-auto">
+        <div ref={cardRef} className="bg-gray-800 rounded-lg p-6 max-w-2xl mx-auto">
             {/* Progress Bar */}
             <div className="w-full bg-gray-700 h-2 rounded-full mb-6">
                 <div
