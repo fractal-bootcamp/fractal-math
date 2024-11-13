@@ -39,7 +39,7 @@ export default function ConceptFlow() {
                 const curves = await response.json();
                 if (curves.length > 0) {
                     // Replace all nodes with API data (using first 5 curves)
-                    const initialNodes: NodeData[] = curves.slice(0, 5).map(curve => ({
+                    const initialNodes: NodeData[] = curves.slice(0, 5).map((curve: { id: string; name: string }) => ({
                         id: curve.id,
                         label: curve.name,
                         comfort: null
