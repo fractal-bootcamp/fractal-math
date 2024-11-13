@@ -4,16 +4,17 @@ import * as d3 from "d3";
 import ConceptCards from "./ConceptCards";
 
 // Define the structure for node data
-interface NodeData extends d3.SimulationNodeDatum {
-    id: string;
-    label: string;
-    comfort: boolean | null;
+interface NodeData {
+  id: string;
+  label: string;
+  comfort: number | null;
+  category: string;
 }
 
 // Define the structure for link data
 interface LinkData {
-    source: string;
-    target: string;
+  source: string;
+  target: string;
 }
 
 // Add these interfaces for d3 types
@@ -23,147 +24,235 @@ interface LinkData {
 // }
 
 interface DragEvent extends d3.D3DragEvent<SVGGElement, NodeData, NodeData> {
-    subject: NodeData;
+  subject: NodeData;
+}
+
+interface ConceptFlowData {
+  nodes: NodeData[];
+  links: LinkData[];
 }
 
 export default function ConceptFlow() {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [data, setData] = useState<ConceptFlowData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedConcept, setSelectedConcept] = useState<NodeData | null>(null);
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
-    // Move these inside useEffect to avoid the dependency warning
-    // while maintaining the exact same functionality
-    useEffect(() => {
-        const initialNodes: NodeData[] = [
-            { id: "1", label: "Pythagorean Theorem", comfort: null },
-            { id: "2", label: "Right Triangles", comfort: null },
-            { id: "3", label: "Square Numbers", comfort: null },
-            { id: "4", label: "Distance Formula", comfort: null },
-            { id: "5", label: "Trigonometry", comfort: null },
-        ];
+  useEffect(() => {
+    fetchConceptData();
+  }, []);
 
-        const initialLinks: LinkData[] = [
-            { source: "2", target: "1" },
-            { source: "3", target: "1" },
-            { source: "1", target: "4" },
-            { source: "1", target: "5" },
-        ];
+  const fetchConceptData = async () => {
+    try {
+      console.log("Starting data fetch");
+      const response = await fetch("/api/concept-flow");
+      console.log("API Response:", response.status);
 
-        if (!containerRef.current) return;
+      if (!response.ok) throw new Error("Failed to fetch concept data");
+      const conceptData = await response.json();
+      console.log("Received data:", conceptData);
 
-        d3.select(containerRef.current).selectAll("svg").remove();
+      if (!conceptData.nodes || !conceptData.links) {
+        throw new Error("Invalid data format received");
+      }
 
-        const width = containerRef.current.offsetWidth || 800;
-        const height = containerRef.current.offsetHeight || 600;
+      setData(conceptData);
+    } catch (err) {
+      console.error("Error:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch concept data"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const svg = d3
-            .select(containerRef.current)
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height);
+  useEffect(() => {
+    if (!data || !containerRef.current) return;
 
-        const simulation = d3
-            .forceSimulation(initialNodes)
-            .force(
-                "link",
-                d3
-                    .forceLink(initialLinks)
-                    // Allow any: d3's force layout internal node structure doesn't align cleanly with our NodeData type
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    .id((d: any) => d.id)
-                    .distance(150)
-            )
-            .force("charge", d3.forceManyBody().strength(-1000))
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collision", d3.forceCollide().radius(80));
+    // Clear any existing SVG
+    d3.select(containerRef.current).selectAll("svg").remove();
 
-        const links = svg
-            .append("g")
-            .selectAll("line")
-            .data(initialLinks)
-            .join("line")
-            .attr("stroke", (d) => (["2", "3"].includes(d.source as string) ? "#ff6b6b" : "#69db7c"))
-            .attr("stroke-width", 2);
+    // Get container dimensions
+    const container = containerRef.current;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
 
-        const nodes = svg.append("g").selectAll("g").data(initialNodes).join("g");
+    console.log("Container dimensions:", width, height); // Debug dimensions
 
-        nodes
-            .append("circle")
-            .attr("r", 30)
-            .attr("fill", "#4a6fa5")
-            .attr("data-id", d => d.id)
-            .on("click", (_event, d) => setSelectedConcept(d.id));
+    // Create SVG with explicit dimensions and background
+    const svg = d3
+      .select(containerRef.current)
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .style("background-color", "#111") // Dark background to see if SVG is rendered
+      .append("g");
 
-        nodes
-            .append("text")
-            .text((d) => d.label)
-            .attr("text-anchor", "middle")
-            .attr("dy", ".35em")
-            .attr("fill", "white");
+    // Create the simulation with actual data
+    const simulation = d3
+      .forceSimulation(data.nodes)
+      .force(
+        "link",
+        d3
+          .forceLink(data.links)
+          .id((d: any) => d.id)
+          .distance(100)
+      )
+      .force("charge", d3.forceManyBody().strength(-300))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collision", d3.forceCollide().radius(50));
 
-        nodes.call(
-            d3
-                // Allow any: d3's drag behavior works with various element types, strict typing adds unnecessary complexity
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .drag<any, NodeData>()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended)
-        );
+    // Create links with visible styling
+    const links = svg
+      .append("g")
+      .selectAll("line")
+      .data(data.links)
+      .join("line")
+      .style("stroke", "#666")
+      .style("stroke-width", 2);
 
-        simulation.on("tick", () => {
-            links
-                .attr("x1", (d) => {
-                    const source = d.source as unknown as NodeData;
-                    return source.x!;
-                })
-                .attr("y1", (d) => {
-                    const source = d.source as unknown as NodeData;
-                    return source.y!;
-                })
-                .attr("x2", (d) => {
-                    const target = d.target as unknown as NodeData;
-                    return target.x!;
-                })
-                .attr("y2", (d) => {
-                    const target = d.target as unknown as NodeData;
-                    return target.y!;
-                });
-
-            nodes.attr("transform", (d: NodeData) => `translate(${d.x},${d.y})`);
+    // Create nodes with visible styling
+    const nodes = svg
+      .append("g")
+      .selectAll("g")
+      .data(data.nodes)
+      .join("g")
+      .on("click", (event, d) => {
+        event.stopPropagation();
+        setSelectedConcept(d);
+        setPopupPosition({
+          x: event.pageX,
+          y: event.pageY,
         });
+        console.log("Clicked node:", d); // Debug log to see the node data
+      });
 
-        function dragstarted(event: DragEvent) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x;
-            event.subject.fy = event.subject.y;
-        }
+    // Add click handler to background to close popup
+    svg.on("click", () => {
+      setSelectedConcept(null);
+    });
 
-        function dragged(event: DragEvent) {
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }
+    // Add circles to nodes
+    nodes
+      .append("circle")
+      .attr("r", 30)
+      .style("fill", "#4f46e5")
+      .style("stroke", "#fff")
+      .style("stroke-width", 2);
 
-        function dragended(event: DragEvent) {
-            if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
-        }
-    }, []); // Empty dependency array since all data is now internal to the effect
+    // Add labels to nodes
+    nodes
+      .append("text")
+      .text((d) => d.label)
+      .attr("text-anchor", "middle")
+      .attr("dy", ".35em")
+      .style("fill", "#fff")
+      .style("font-size", "12px");
 
-    const handleConceptComplete = (conceptId: string) => {
-        setSelectedConcept(null);
-        const node = d3.select(`circle[data-id="${conceptId}"]`);
-        node.attr("stroke", "#4CAF50").attr("stroke-width", 4);
-    };
-
-    return (
-        <div className="relative w-full h-full">
-            <div ref={containerRef} className="w-full h-full" />
-            {selectedConcept && (
-                <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center p-4">
-                    <ConceptCards conceptId={selectedConcept} onComplete={handleConceptComplete} />
-                </div>
-            )}
-        </div>
+    // Add drag behavior
+    nodes.call(
+      d3
+        .drag<any, any>()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended)
     );
+
+    // Update positions on simulation tick
+    simulation.on("tick", () => {
+      links
+        .attr("x1", (d) => (d.source as any).x)
+        .attr("y1", (d) => (d.source as any).y)
+        .attr("x2", (d) => (d.target as any).x)
+        .attr("y2", (d) => (d.target as any).y);
+
+      nodes.attr("transform", (d) => `translate(${d.x},${d.y})`);
+    });
+
+    function dragstarted(event: any) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      event.subject.fx = event.subject.x;
+      event.subject.fy = event.subject.y;
+    }
+
+    function dragged(event: any) {
+      event.subject.fx = event.x;
+      event.subject.fy = event.y;
+    }
+
+    function dragended(event: any) {
+      if (!event.active) simulation.alphaTarget(0);
+      event.subject.fx = null;
+      event.subject.fy = null;
+    }
+
+    return () => {
+      simulation.stop();
+    };
+  }, [data]);
+
+  if (loading) {
+    console.log("Rendering loading state");
+    return <div className="text-white">Loading concept map...</div>;
+  }
+
+  if (error) {
+    console.log("Rendering error state:", error);
+    return <div className="text-white">Error: {error}</div>;
+  }
+
+  if (!data) {
+    console.log("No data available");
+    return <div className="text-white">No concept data available</div>;
+  }
+
+  console.log("Rendering visualization with data:", data);
+
+  return (
+    <div className="relative">
+      <div
+        ref={containerRef}
+        className="w-full h-full bg-black border border-gray-700 rounded-lg"
+        style={{ minHeight: "600px" }}
+      />
+
+      {/* Concept Details Popup */}
+      {selectedConcept && (
+        <div
+          className="absolute bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-lg"
+          style={{
+            left: popupPosition.x,
+            top: popupPosition.y,
+            transform: "translate(-50%, -100%)",
+            zIndex: 1000,
+            minWidth: "300px",
+          }}
+        >
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-lg font-semibold text-white">
+              {selectedConcept.label}
+            </h3>
+            <button
+              onClick={() => setSelectedConcept(null)}
+              className="text-gray-400 hover:text-white"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Concept Cards Component */}
+          <ConceptCards
+            conceptId={selectedConcept.id}
+            onComplete={(conceptId) => {
+              // Handle completion
+              console.log(`Completed concept: ${conceptId}`);
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
 }

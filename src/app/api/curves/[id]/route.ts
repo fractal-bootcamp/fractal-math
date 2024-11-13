@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import { WolframAPI } from "../../../../lib/wolfram";
 import { prisma } from "../../../../lib/prisma";
-
-const wolframAPI = new WolframAPI(process.env.WOLFRAM_APP_ID!);
 
 export async function GET(
   request: Request,
@@ -11,49 +8,24 @@ export async function GET(
   const id = params.id;
 
   try {
-    // find curve in db
+    console.log("API: Looking for curve with ID:", id); // Debug log
     const curve = await prisma.curve.findUnique({
-      where: {
-        id: id,
-      },
-      include: {
-        category: true,
-      },
+      where: { id: id },
+      include: { category: true },
     });
+
+    console.log("API: Found curve:", curve); // Debug log
 
     if (!curve) {
-      return NextResponse.json({ message: "curve not found" }, { status: 404 });
+      return NextResponse.json(null);
     }
 
-    // parse JSON strings back into objects
-    const equations = JSON.parse(curve.equations as string);
-    const parameters = JSON.parse(curve.parameters as string);
-
-    // fetch wolfram data
-    const wolframData = await wolframAPI.getCurveData(curve.wolframId);
-
-    // return formatted response
-    return NextResponse.json({
-      id: curve.id,
-      name: curve.name,
-      description: curve.description,
-      wolframId: curve.wolframId,
-      category: {
-        id: curve.category.id,
-        name: curve.category.name,
-        description: curve.category.description,
-      },
-      equations,
-      parameters,
-      wolframData,
-    });
+    return NextResponse.json(curve);
   } catch (error) {
-    console.error("Error fetching curve data:", error);
+    console.error("API Error:", error);
     return NextResponse.json(
-      { message: "Error fetching curve data" },
+      { message: "Error fetching curve" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

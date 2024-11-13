@@ -1,187 +1,197 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 
 interface Step {
-    id: string;
-    title: string;
-    content: string;
-    formula?: string;
-    validation?: (input: string) => boolean;
+  id: string;
+  title: string;
+  content: string;
+  formula?: string;
+  validation?: (input: string) => boolean;
 }
 
 interface ConceptCardProps {
-    conceptId: string;
-    onComplete: (conceptId: string) => void;
+  conceptId: string;
+  onComplete: (conceptId: string) => void;
 }
 
 const conceptStepsMap: Record<string, Step[]> = {
-    "default": [
-        {
-            id: '1',
-            title: 'Coming Soon',
-            content: 'This concept is currently under development. Check back later for interactive content!',
-        }
-    ],
-    "1": [
-        {
-            id: '1',
-            title: 'Understanding the Pythagorean Theorem',
-            content: 'The Pythagorean theorem states that in a right triangle, a² + b² = c²',
-            formula: 'a² + b² = c²',
-        },
-        {
-            id: '2',
-            title: 'Identifying the Components',
-            content: 'a and b are the lengths of the two legs, c is the length of the hypotenuse',
-            formula: 'c = √(a² + b²)',
-        },
-        {
-            id: '3',
-            title: 'Practice Problem',
-            content: 'If a = 3 and b = 4, what is c?',
-            validation: (input) => parseFloat(input) === 5,
-        },
-    ],
-    "2": [
-        {
-            id: '1',
-            title: 'What is a Right Triangle?',
-            content: 'A right triangle is a triangle that has one 90-degree angle (right angle)',
-            formula: '90°',
-        },
-        {
-            id: '2',
-            title: 'Properties of Right Triangles',
-            content: 'The side opposite to the right angle is called the hypotenuse. It is always the longest side.',
-        },
-        {
-            id: '3',
-            title: 'Angle Properties',
-            content: 'The other two angles in a right triangle are always acute (less than 90°) and sum to 90°',
-            formula: 'α + β = 90°',
-        },
-        {
-            id: '4',
-            title: 'Quick Check',
-            content: 'If one angle in a right triangle is 30°, what is the other non-right angle?',
-            validation: (input) => parseFloat(input) === 60,
-        },
-    ]
+  default: [
+    {
+      id: "1",
+      title: "Coming Soon",
+      content:
+        "This concept is currently under development. Check back later for interactive content!",
+    },
+  ],
+  Ellipse: [
+    {
+      id: "1",
+      title: "Ellipse",
+      content: "A stretched circle with two focal points",
+      formula:
+        "Cartesian: (x²/a²) + (y²/b²) = 1\nParametric: x = a * cos(t), y = b * sin(t)",
+    },
+    {
+      id: "2",
+      title: "Parameters",
+      content:
+        "semi-major axis (a): 2 Range: [0.1 to 10]\nsemi-minor axis (b): 1 Range: [0.1 to 10]",
+    },
+  ],
+  Parabola: [
+    {
+      id: "1",
+      title: "Parabola",
+      content:
+        "A U-shaped symmetric curve that represents a quadratic function",
+      formula: "Cartesian: y = a(x - h)² + k\nParametric: x = t, y = a*t²",
+    },
+    {
+      id: "2",
+      title: "Parameters",
+      content:
+        "vertical stretch (a): 1 Range: [0.1 to 5]\nhorizontal shift (h): 0 Range: [-5 to 5]\nvertical shift (k): 0 Range: [-5 to 5]",
+    },
+  ],
+  "Sine Wave": [
+    {
+      id: "1",
+      title: "Sine Wave",
+      content: "A periodic wave that oscillates above and below the x-axis",
+      formula: "Cartesian: y = A*sin(ωx)\nParametric: x = t, y = A*sin(ωt)",
+    },
+    {
+      id: "2",
+      title: "Parameters",
+      content:
+        "amplitude (A): 1 Range: [0.1 to 5]\nangular frequency (ω): 1 Range: [0.1 to 10]",
+    },
+  ],
+  Lemniscate: [
+    {
+      id: "1",
+      title: "Lemniscate",
+      content:
+        "A figure-eight curve that represents the locus of points where the product of distances from two fixed points is constant",
+      formula:
+        "Cartesian: (x² + y²)² = 2a²(x² - y²)\nParametric: x = a*cos(t)/(1 + sin²(t)), y = a*sin(t)*cos(t)/(1 + sin²(t))",
+    },
+    {
+      id: "2",
+      title: "Parameters",
+      content: "scale factor (a): 1 Range: [0.1 to 5]",
+    },
+  ],
+  Cardioid: [
+    {
+      id: "1",
+      title: "Cardioid",
+      content:
+        "A heart-shaped curve traced by a point on a circle rolling around another circle of the same size",
+      formula:
+        "Cartesian: (x² + y² - 2ax)² = 4a²(x² + y²)\nParametric: x = a*(2*cos(t) - cos(2*t)), y = a*(2*sin(t) - sin(2*t))",
+    },
+    {
+      id: "2",
+      title: "Parameters",
+      content: "scale factor (a): 1 Range: [0.1 to 5]",
+    },
+  ],
+  Hyperbola: [
+    {
+      id: "1",
+      title: "Hyperbola",
+      content:
+        "A curve consisting of two infinite branches, formed by the intersection of a plane with a double cone",
+      formula:
+        "Cartesian: (x²/a²) - (y²/b²) = 1\nParametric: x = a*sec(t), y = b*tan(t)",
+    },
+    {
+      id: "2",
+      title: "Parameters",
+      content:
+        "transverse axis (a): 1 Range: [0.1 to 5]\nconjugate axis (b): 1 Range: [0.1 to 5]",
+    },
+  ],
+  Astroid: [
+    {
+      id: "1",
+      title: "Astroid",
+      content:
+        "A star-shaped curve with four cusps, traced by a point on a circle rolling inside a larger circle",
+      formula:
+        "Cartesian: (x/a)^(2/3) + (y/a)^(2/3) = 1\nParametric: x = a*cos³(t), y = a*sin³(t)",
+    },
+    {
+      id: "2",
+      title: "Parameters",
+      content: "radius (a): 1 Range: [0.1 to 5]",
+    },
+  ],
+  "Rose Curve": [
+    {
+      id: "1",
+      title: "Rose Curve",
+      content: "A mathematical curve that looks like a flower with petals",
+      formula:
+        "Cartesian: r = a*cos(nθ)\nParametric: x = a*cos(n*t)*cos(t), y = a*cos(n*t)*sin(t)",
+    },
+    {
+      id: "2",
+      title: "Parameters",
+      content:
+        "scale factor (a): 1 Range: [0.1 to 5]\npetal count (n): 4 Range: [1 to 8]",
+    },
+  ],
 };
 
-export default function ConceptCards({ conceptId, onComplete }: ConceptCardProps) {
-    const steps = conceptStepsMap[conceptId] || conceptStepsMap["default"];
-    const [currentStep, setCurrentStep] = useState(0);
-    const [userInput, setUserInput] = useState('');
-    const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-    const cardRef = useRef<HTMLDivElement>(null);
+export default function ConceptCards({
+  conceptId,
+  onComplete,
+}: ConceptCardProps) {
+  console.log("ConceptCards received ID:", conceptId);
+  console.log("Available concepts:", Object.keys(conceptStepsMap));
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
-                onComplete(conceptId);
+  const conceptContent =
+    conceptStepsMap[conceptId] || conceptStepsMap["default"];
+  const [currentStep, setCurrentStep] = useState(0);
+
+  return (
+    <div className="space-y-4 text-white">
+      <div className="space-y-2">
+        <h4 className="font-semibold">{conceptContent[currentStep].title}</h4>
+        <p className="text-sm text-gray-300">
+          {conceptContent[currentStep].content}
+        </p>
+        {conceptContent[currentStep].formula && (
+          <div className="bg-gray-800 p-2 rounded">
+            <pre className="whitespace-pre-wrap">
+              {conceptContent[currentStep].formula}
+            </pre>
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-between">
+        <button
+          onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
+          disabled={currentStep === 0}
+          className="px-3 py-1 bg-gray-700 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <button
+          onClick={() => {
+            if (currentStep < conceptContent.length - 1) {
+              setCurrentStep((prev) => prev + 1);
+            } else {
+              onComplete(conceptId);
             }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [conceptId, onComplete]);
-
-    const handleNext = () => {
-        if (currentStep < steps.length - 1) {
-            setCurrentStep(prev => prev + 1);
-            setUserInput('');
-            setIsCorrect(null);
-        } else {
-            onComplete(conceptId);
-        }
-    };
-
-    const handlePrevious = () => {
-        if (currentStep > 0) {
-            setCurrentStep(prev => prev - 1);
-            setUserInput('');
-            setIsCorrect(null);
-        }
-    };
-
-    const handleValidation = () => {
-        const step = steps[currentStep];
-        if (step.validation) {
-            const result = step.validation(userInput);
-            setIsCorrect(result);
-            if (result) {
-                setTimeout(handleNext, 1000);
-            }
-        }
-    };
-
-    const step = steps[currentStep];
-
-    return (
-        <div ref={cardRef} className="bg-gray-800 rounded-lg p-6 max-w-2xl mx-auto">
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-700 h-2 rounded-full mb-6">
-                <div
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-                />
-            </div>
-
-            {/* Card Content */}
-            <div className="space-y-4">
-                <h3 className="text-xl font-bold text-white">{step.title}</h3>
-                <p className="text-gray-300">{step.content}</p>
-
-                {step.formula && (
-                    <div className="bg-gray-700 p-4 rounded-lg">
-                        <code className="text-green-400">{step.formula}</code>
-                    </div>
-                )}
-
-                {step.validation && (
-                    <div className="space-y-2">
-                        <input
-                            type="text"
-                            value={userInput}
-                            onChange={(e) => setUserInput(e.target.value)}
-                            className="w-full bg-gray-700 text-white p-2 rounded-lg"
-                            placeholder="Enter your answer..."
-                        />
-                        <button
-                            onClick={handleValidation}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                        >
-                            Check Answer
-                        </button>
-                        {isCorrect !== null && (
-                            <p className={`text-${isCorrect ? 'green' : 'red'}-400`}>
-                                {isCorrect ? 'Correct!' : 'Try again!'}
-                            </p>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-6">
-                <button
-                    onClick={handlePrevious}
-                    disabled={currentStep === 0}
-                    className="bg-gray-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
-                >
-                    Previous
-                </button>
-                {!step.validation && (
-                    <button
-                        onClick={handleNext}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                    >
-                        {currentStep === steps.length - 1 ? 'Complete' : 'Next'}
-                    </button>
-                )}
-            </div>
-        </div>
-    );
+          }}
+          className="px-3 py-1 bg-blue-600 rounded"
+        >
+          {currentStep < conceptContent.length - 1 ? "Next" : "Complete"}
+        </button>
+      </div>
+    </div>
+  );
 }

@@ -51,7 +51,7 @@
     "@types/bun": "latest"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "bun prisma/seed.ts"
   },
   "module": "index.ts",
   "type": "module"

@@ -1,64 +1,64 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { BookOpen, Code, Users, BarChart2, Bell, Settings } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { LearningPathwayModule } from '@/Modules/DashboardModules/LearningPathwayModule'
-import { CodeRepositoryModule } from '@/Modules/DashboardModules/CodeRepositoryModule'
-import { PeerCollaborationModule } from '@/Modules/DashboardModules/PeerCollaborationModule'
-import { ProgressAnalyticsModule } from '@/Modules/DashboardModules/ProgressAnalyticsModule'
-import { NotificationsModule } from '@/Modules/DashboardModules/NotificationsModule'
-import { SettingsModule } from '@/Modules/DashboardModules/SettingsModule'
+import { useState } from "react";
+import { BookOpen, Code, Users, BarChart2, Bell, Settings } from "lucide-react";
+import { cn } from "../lib/utils";
+import { LearningPathwayModule } from "../Modules/DashboardModules/LearningPathwayModule";
+import { CodeRepositoryModule } from "../Modules/DashboardModules/CodeRepositoryModule";
+import { PeerCollaborationModule } from "../Modules/DashboardModules/PeerCollaborationModule";
+import { ProgressAnalyticsModule } from "../Modules/DashboardModules/ProgressAnalyticsModule";
+import { NotificationsModule } from "../Modules/DashboardModules/NotificationsModule";
+import { SettingsModule } from "../Modules/DashboardModules/SettingsModule";
 
 export function Sidebar() {
-  const [activeModule, setActiveModule] = useState<string | null>(null)
+  const [activeModule, setActiveModule] = useState<string | null>(null);
 
   const modules = [
-    { 
-      id: 'learning-pathway',
+    {
+      id: "learning-pathway",
       icon: BookOpen,
-      label: 'Learning Pathways',
-      component: <LearningPathwayModule />
+      label: "Learning Pathways",
+      component: <LearningPathwayModule />,
     },
-    { 
-      id: 'code-repository',
+    {
+      id: "code-repository",
       icon: Code,
-      label: 'Code Repository',
-      component: <CodeRepositoryModule />
+      label: "Code Repository",
+      component: <CodeRepositoryModule />,
     },
-    { 
-      id: 'progress-analytics',
+    {
+      id: "progress-analytics",
       icon: BarChart2,
-      label: 'Progress Analytics',
-      component: <ProgressAnalyticsModule />
+      label: "Progress Analytics",
+      component: <ProgressAnalyticsModule />,
     },
-    { 
-      id: 'peer-collaboration',
+    {
+      id: "peer-collaboration",
       icon: Users,
-      label: 'Peer Collaboration',
-      component: <PeerCollaborationModule />
+      label: "Peer Collaboration",
+      component: <PeerCollaborationModule />,
     },
-    { 
-      id: 'notifications',
+    {
+      id: "notifications",
       icon: Bell,
-      label: 'Notifications',
-      component: <NotificationsModule />
+      label: "Notifications",
+      component: <NotificationsModule />,
     },
-    { 
-      id: 'settings',
+    {
+      id: "settings",
       icon: Settings,
-      label: 'Settings',
-      component: <SettingsModule />
-    }
-  ]
+      label: "Settings",
+      component: <SettingsModule />,
+    },
+  ];
 
   return (
     <div className="flex">
       <div className="w-64 h-[calc(100vh-4rem)] bg-black border-r border-gray-800">
         <div className="flex flex-col h-full py-2">
           {modules.map((module) => {
-            const Icon = module.icon
-            const isActive = activeModule === module.id
+            const Icon = module.icon;
+            const isActive = activeModule === module.id;
 
             return (
               <button
@@ -72,23 +72,22 @@ export function Sidebar() {
                 )}
               >
                 <Icon className="h-5 w-5" />
-                <span className="text-sm">
-                  {module.label}
-                </span>
+                <span className="text-sm">{module.label}</span>
               </button>
-            )
+            );
           })}
         </div>
       </div>
       <div className="flex-1 p-4">
-        {modules.map((module) => (
-          activeModule === module.id && (
-            <div key={module.id} className="transition-all duration-300">
-              {module.component}
-            </div>
-          )
-        ))}
+        {modules.map(
+          (module) =>
+            activeModule === module.id && (
+              <div key={module.id} className="transition-all duration-300">
+                {module.component}
+              </div>
+            )
+        )}
       </div>
     </div>
-  )
-} 
+  );
+}

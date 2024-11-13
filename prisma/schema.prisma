@@ -56,6 +56,9 @@ model Curve {
     visualizations VisualizationConfig[]
     userProgress   UserProgress[]
     pathSteps      PathStep[] // for learning paths
+    equation       String?
+    imageUrl       String?
+    animationData  Json? // Store animation parameters/paths
 
     @@index([categoryId])
     @@index([wolframId]) // for wolfram lookups 
