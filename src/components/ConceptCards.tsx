@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CurveInfo } from '@/types/curveTypes';
+import { useSession } from 'next-auth/react';
 
 interface ConceptCardProps {
     conceptId: string;
@@ -9,6 +10,8 @@ interface ConceptCardProps {
 export default function ConceptCards({ conceptId, onComplete }: ConceptCardProps) {
     const [curveData, setCurveData] = useState<CurveInfo | null>(null);
     const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
+    const { data: session } = useSession();
 
     useEffect(() => {
         const fetchCurveData = async () => {
@@ -25,6 +28,40 @@ export default function ConceptCards({ conceptId, onComplete }: ConceptCardProps
 
         fetchCurveData();
     }, [conceptId]);
+
+    const handleComplete = async () => {
+        if (!session) {
+            console.error('User must be logged in to update progress');
+            return;
+        }
+
+        try {
+            setUpdating(true);
+            const response = await fetch('/api/user-progress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    curveId: conceptId,
+                    status: 'COMPLETED'
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update progress');
+            }
+
+            const data = await response.json();
+            console.log('Progress updated:', data);
+
+            onComplete(conceptId);
+        } catch (error) {
+            console.error('Error updating progress:', error);
+        } finally {
+            setUpdating(false);
+        }
+    };
 
     if (loading) return <div className="bg-white p-6 rounded-lg">Loading...</div>;
     if (!curveData) return <div className="bg-white p-6 rounded-lg">No data found</div>;
@@ -51,10 +88,14 @@ export default function ConceptCards({ conceptId, onComplete }: ConceptCardProps
             </div>
 
             <button
-                onClick={() => onComplete(conceptId)}
-                className="mt-6 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 sticky bottom-4"
+                onClick={handleComplete}
+                disabled={updating}
+                className={`mt-6 px-4 py-2 rounded sticky bottom-4 ${updating
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    }`}
             >
-                Complete
+                {updating ? 'Updating...' : 'Complete'}
             </button>
         </div>
     );
