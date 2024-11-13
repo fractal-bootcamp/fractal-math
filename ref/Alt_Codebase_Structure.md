@@ -1,7 +1,7 @@
 Alt_Codebase_Structure.md
 
 ```mermaid
-graph TD
+graph LR
 subgraph Frontend
 App[App Root]
 subgraph Components
