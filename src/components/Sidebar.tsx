@@ -14,37 +14,37 @@ export function Sidebar() {
   const [activeModule, setActiveModule] = useState<string | null>(null)
 
   const modules = [
-    { 
+    {
       id: 'learning-pathway',
       icon: BookOpen,
       label: 'Learning Pathways',
       component: <LearningPathwayModule />
     },
-    { 
+    {
       id: 'code-repository',
       icon: Code,
       label: 'Code Repository',
       component: <CodeRepositoryModule />
     },
-    { 
+    {
       id: 'progress-analytics',
       icon: BarChart2,
       label: 'Progress Analytics',
       component: <ProgressAnalyticsModule />
     },
-    { 
+    {
       id: 'peer-collaboration',
       icon: Users,
       label: 'Peer Collaboration',
       component: <PeerCollaborationModule />
     },
-    { 
+    {
       id: 'notifications',
       icon: Bell,
       label: 'Notifications',
       component: <NotificationsModule />
     },
-    { 
+    {
       id: 'settings',
       icon: Settings,
       label: 'Settings',
@@ -53,8 +53,8 @@ export function Sidebar() {
   ]
 
   return (
-    <div className="flex">
-      <div className="w-64 h-[calc(100vh-4rem)] bg-black border-r border-gray-800">
+    <div className="relative flex h-[calc(100vh-4rem)]">
+      <div className="w-64 bg-black border-r border-gray-800 z-20">
         <div className="flex flex-col h-full py-2">
           {modules.map((module) => {
             const Icon = module.icon
@@ -80,15 +80,22 @@ export function Sidebar() {
           })}
         </div>
       </div>
-      <div className="flex-1 p-4">
-        {modules.map((module) => (
-          activeModule === module.id && (
-            <div key={module.id} className="transition-all duration-300">
-              {module.component}
-            </div>
-          )
-        ))}
+      <div className="flex-1">
+        {/* Your mathematical concepts content goes here */}
       </div>
+      {activeModule && (
+        <div className="fixed top-16 left-64 bottom-0 w-80 bg-black/95 border-r border-gray-800 backdrop-blur-sm z-30">
+          <div className="p-4 h-full overflow-y-auto">
+            {modules.map((module) => (
+              activeModule === module.id && (
+                <div key={module.id} className="transition-all duration-300">
+                  {module.component}
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 } 
