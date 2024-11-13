@@ -1,187 +1,61 @@
-import { useState, useRef, useEffect } from 'react';
-
-interface Step {
-    id: string;
-    title: string;
-    content: string;
-    formula?: string;
-    validation?: (input: string) => boolean;
-}
+import { useState, useEffect } from 'react';
+import { CurveInfo } from '@/types/curveTypes';
 
 interface ConceptCardProps {
     conceptId: string;
     onComplete: (conceptId: string) => void;
 }
 
-const conceptStepsMap: Record<string, Step[]> = {
-    "default": [
-        {
-            id: '1',
-            title: 'Coming Soon',
-            content: 'This concept is currently under development. Check back later for interactive content!',
-        }
-    ],
-    "1": [
-        {
-            id: '1',
-            title: 'Understanding the Pythagorean Theorem',
-            content: 'The Pythagorean theorem states that in a right triangle, a² + b² = c²',
-            formula: 'a² + b² = c²',
-        },
-        {
-            id: '2',
-            title: 'Identifying the Components',
-            content: 'a and b are the lengths of the two legs, c is the length of the hypotenuse',
-            formula: 'c = √(a² + b²)',
-        },
-        {
-            id: '3',
-            title: 'Practice Problem',
-            content: 'If a = 3 and b = 4, what is c?',
-            validation: (input) => parseFloat(input) === 5,
-        },
-    ],
-    "2": [
-        {
-            id: '1',
-            title: 'What is a Right Triangle?',
-            content: 'A right triangle is a triangle that has one 90-degree angle (right angle)',
-            formula: '90°',
-        },
-        {
-            id: '2',
-            title: 'Properties of Right Triangles',
-            content: 'The side opposite to the right angle is called the hypotenuse. It is always the longest side.',
-        },
-        {
-            id: '3',
-            title: 'Angle Properties',
-            content: 'The other two angles in a right triangle are always acute (less than 90°) and sum to 90°',
-            formula: 'α + β = 90°',
-        },
-        {
-            id: '4',
-            title: 'Quick Check',
-            content: 'If one angle in a right triangle is 30°, what is the other non-right angle?',
-            validation: (input) => parseFloat(input) === 60,
-        },
-    ]
-};
-
 export default function ConceptCards({ conceptId, onComplete }: ConceptCardProps) {
-    const steps = conceptStepsMap[conceptId] || conceptStepsMap["default"];
-    const [currentStep, setCurrentStep] = useState(0);
-    const [userInput, setUserInput] = useState('');
-    const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-    const cardRef = useRef<HTMLDivElement>(null);
+    const [curveData, setCurveData] = useState<CurveInfo | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
-                onComplete(conceptId);
+        const fetchCurveData = async () => {
+            try {
+                const response = await fetch(`/api/curves/${conceptId}`);
+                const data = await response.json();
+                setCurveData(data);
+            } catch (error) {
+                console.error('Error fetching curve data:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [conceptId, onComplete]);
+        fetchCurveData();
+    }, [conceptId]);
 
-    const handleNext = () => {
-        if (currentStep < steps.length - 1) {
-            setCurrentStep(prev => prev + 1);
-            setUserInput('');
-            setIsCorrect(null);
-        } else {
-            onComplete(conceptId);
-        }
-    };
-
-    const handlePrevious = () => {
-        if (currentStep > 0) {
-            setCurrentStep(prev => prev - 1);
-            setUserInput('');
-            setIsCorrect(null);
-        }
-    };
-
-    const handleValidation = () => {
-        const step = steps[currentStep];
-        if (step.validation) {
-            const result = step.validation(userInput);
-            setIsCorrect(result);
-            if (result) {
-                setTimeout(handleNext, 1000);
-            }
-        }
-    };
-
-    const step = steps[currentStep];
+    if (loading) return <div className="bg-white p-6 rounded-lg">Loading...</div>;
+    if (!curveData) return <div className="bg-white p-6 rounded-lg">No data found</div>;
 
     return (
-        <div ref={cardRef} className="bg-gray-800 rounded-lg p-6 max-w-2xl mx-auto">
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-700 h-2 rounded-full mb-6">
-                <div
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-                />
-            </div>
+        <div className="bg-white p-6 rounded-lg w-[500px] h-[600px] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-4 sticky top-0 bg-white">{curveData.name}</h2>
+            <p className="text-gray-600 mb-4">{curveData.description}</p>
 
-            {/* Card Content */}
             <div className="space-y-4">
-                <h3 className="text-xl font-bold text-white">{step.title}</h3>
-                <p className="text-gray-300">{step.content}</p>
+                <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-2">Equations:</h3>
+                    <pre className="bg-gray-100 p-2 rounded">
+                        {JSON.stringify(curveData.equations, null, 2)}
+                    </pre>
+                </div>
 
-                {step.formula && (
-                    <div className="bg-gray-700 p-4 rounded-lg">
-                        <code className="text-green-400">{step.formula}</code>
-                    </div>
-                )}
-
-                {step.validation && (
-                    <div className="space-y-2">
-                        <input
-                            type="text"
-                            value={userInput}
-                            onChange={(e) => setUserInput(e.target.value)}
-                            className="w-full bg-gray-700 text-white p-2 rounded-lg"
-                            placeholder="Enter your answer..."
-                        />
-                        <button
-                            onClick={handleValidation}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                        >
-                            Check Answer
-                        </button>
-                        {isCorrect !== null && (
-                            <p className={`text-${isCorrect ? 'green' : 'red'}-400`}>
-                                {isCorrect ? 'Correct!' : 'Try again!'}
-                            </p>
-                        )}
-                    </div>
-                )}
+                <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-2">Parameters:</h3>
+                    <pre className="bg-gray-100 p-2 rounded">
+                        {JSON.stringify(curveData.parameters, null, 2)}
+                    </pre>
+                </div>
             </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-6">
-                <button
-                    onClick={handlePrevious}
-                    disabled={currentStep === 0}
-                    className="bg-gray-600 text-white px-4 py-2 rounded-lg disabled:opacity-50"
-                >
-                    Previous
-                </button>
-                {!step.validation && (
-                    <button
-                        onClick={handleNext}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-                    >
-                        {currentStep === steps.length - 1 ? 'Complete' : 'Next'}
-                    </button>
-                )}
-            </div>
+            <button
+                onClick={() => onComplete(conceptId)}
+                className="mt-6 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 sticky bottom-4"
+            >
+                Complete
+            </button>
         </div>
     );
 }
