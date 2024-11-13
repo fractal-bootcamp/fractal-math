@@ -10,32 +10,66 @@ interface Step {
 
 interface ConceptCardProps {
     conceptId: string;
-    steps: Step[];
     onComplete: (conceptId: string) => void;
 }
 
-const sampleSteps: Step[] = [
-    {
-        id: '1',
-        title: 'Understanding the Pythagorean Theorem',
-        content: 'The Pythagorean theorem states that in a right triangle, a² + b² = c²',
-        formula: 'a² + b² = c²',
-    },
-    {
-        id: '2',
-        title: 'Identifying the Components',
-        content: 'a and b are the lengths of the two legs, c is the length of the hypotenuse',
-        formula: 'c = √(a² + b²)',
-    },
-    {
-        id: '3',
-        title: 'Practice Problem',
-        content: 'If a = 3 and b = 4, what is c?',
-        validation: (input) => parseFloat(input) === 5,
-    },
-];
+const conceptStepsMap: Record<string, Step[]> = {
+    "default": [
+        {
+            id: '1',
+            title: 'Coming Soon',
+            content: 'This concept is currently under development. Check back later for interactive content!',
+        }
+    ],
+    "1": [
+        {
+            id: '1',
+            title: 'Understanding the Pythagorean Theorem',
+            content: 'The Pythagorean theorem states that in a right triangle, a² + b² = c²',
+            formula: 'a² + b² = c²',
+        },
+        {
+            id: '2',
+            title: 'Identifying the Components',
+            content: 'a and b are the lengths of the two legs, c is the length of the hypotenuse',
+            formula: 'c = √(a² + b²)',
+        },
+        {
+            id: '3',
+            title: 'Practice Problem',
+            content: 'If a = 3 and b = 4, what is c?',
+            validation: (input) => parseFloat(input) === 5,
+        },
+    ],
+    "2": [
+        {
+            id: '1',
+            title: 'What is a Right Triangle?',
+            content: 'A right triangle is a triangle that has one 90-degree angle (right angle)',
+            formula: '90°',
+        },
+        {
+            id: '2',
+            title: 'Properties of Right Triangles',
+            content: 'The side opposite to the right angle is called the hypotenuse. It is always the longest side.',
+        },
+        {
+            id: '3',
+            title: 'Angle Properties',
+            content: 'The other two angles in a right triangle are always acute (less than 90°) and sum to 90°',
+            formula: 'α + β = 90°',
+        },
+        {
+            id: '4',
+            title: 'Quick Check',
+            content: 'If one angle in a right triangle is 30°, what is the other non-right angle?',
+            validation: (input) => parseFloat(input) === 60,
+        },
+    ]
+};
 
-export default function ConceptCards({ conceptId, steps = sampleSteps, onComplete }: ConceptCardProps) {
+export default function ConceptCards({ conceptId, onComplete }: ConceptCardProps) {
+    const steps = conceptStepsMap[conceptId] || conceptStepsMap["default"];
     const [currentStep, setCurrentStep] = useState(0);
     const [userInput, setUserInput] = useState('');
     const [isCorrect, setIsCorrect] = useState<boolean | null>(null);

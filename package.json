@@ -12,8 +12,18 @@
     "@auth/core": "^0.5.1",
     "@auth/prisma-adapter": "^1.0.1",
     "@prisma/client": "^5.22.0",
+    "@radix-ui/react-avatar": "^1.1.1",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-progress": "^1.1.0",
+    "@radix-ui/react-scroll-area": "^1.2.1",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.1",
+    "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
+    "lucide-react": "^0.456.0",
     "mathbox": "^2.3.2-rc1",
     "next": "15.0.3",
     "next-auth": "^4.22.1",
@@ -22,7 +32,10 @@
     "react-dom": "19.0.0-rc-66855b96-20241106",
     "react-p5": "^1.4.1",
     "reactflow": "^11.11.4",
-    "tailwind-merge": "^2.5.4"
+    "recharts": "^2.13.3",
+    "shadcn": "^2.1.6",
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@shadcn/ui": "^0.0.4",
@@ -40,5 +53,6 @@
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
-  "module": "index.ts"
+  "module": "index.ts",
+  "type": "module"
 }

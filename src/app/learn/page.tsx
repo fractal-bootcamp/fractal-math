@@ -3,12 +3,13 @@
 import { useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import ConceptFlow from "@/components/ConceptFlow";
+import { Sidebar } from "@/components/Sidebar";
 
 export default function LearnPage() {
     const { status } = useSession();
 
     if (status === "loading") {
-        return <div>Loading...</div>;
+        return <div className="text-gray-400">Loading...</div>;
     }
 
     if (status === "unauthenticated") {
@@ -16,13 +17,16 @@ export default function LearnPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white pt-16">
-            <div className="container mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold mb-6">Mathematical Concepts</h1>
-                <div className="w-full h-[600px] border border-gray-700 rounded-lg">
-                    <ConceptFlow />
+        <div className="flex h-screen bg-black pt-16">
+            <Sidebar />
+            <main className="flex-1 overflow-auto">
+                <div className="container mx-auto px-4 py-8">
+                    <h1 className="text-3xl font-bold mb-6 text-white">Mathematical Concepts</h1>
+                    <div className="w-full h-[600px] border border-gray-800 rounded-lg bg-black/50">
+                        <ConceptFlow />
+                    </div>
                 </div>
-            </div>
+            </main>
         </div>
     );
 } 
