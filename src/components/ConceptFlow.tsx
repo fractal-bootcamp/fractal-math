@@ -38,19 +38,29 @@ export default function ConceptFlow() {
                 const response = await fetch('/api/curves');
                 const curves = await response.json();
                 if (curves.length > 0) {
-                    // Replace all nodes with API data (using first 5 curves)
-                    const initialNodes: NodeData[] = curves.slice(0, 5).map((curve: { id: string; name: string }) => ({
+                    // Use all curves instead of just the first 5
+                    const initialNodes: NodeData[] = curves.map((curve: { id: string; name: string }) => ({
                         id: curve.id,
                         label: curve.name,
                         comfort: null
                     }));
 
-                    const initialLinks: LinkData[] = [
-                        { source: initialNodes[1].id, target: initialNodes[0].id },
-                        { source: initialNodes[2].id, target: initialNodes[0].id },
-                        { source: initialNodes[0].id, target: initialNodes[3].id },
-                        { source: initialNodes[0].id, target: initialNodes[4].id },
-                    ];
+                    // Create a more connected graph structure
+                    // Each node connects to the next one in sequence, creating a chain
+                    const initialLinks: LinkData[] = [];
+                    for (let i = 0; i < initialNodes.length - 1; i++) {
+                        initialLinks.push({
+                            source: initialNodes[i].id,
+                            target: initialNodes[i + 1].id,
+                        });
+                        // Add some cross connections for every third node
+                        if (i % 3 === 0 && i + 3 < initialNodes.length) {
+                            initialLinks.push({
+                                source: initialNodes[i].id,
+                                target: initialNodes[i + 3].id,
+                            });
+                        }
+                    }
 
                     if (!containerRef.current) return;
 
