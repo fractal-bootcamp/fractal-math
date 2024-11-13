@@ -3,6 +3,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+  // Clear existing data
+  await prisma.curve.deleteMany({});
+  await prisma.category.deleteMany({});
+
   // Create a test category
   const category = await prisma.category.create({
     data: {
@@ -12,13 +16,19 @@ async function main() {
   });
 
   // Create a test curve
-  await prisma.curve.create({
-    data: {
+  await prisma.curve.upsert({
+    // upsert to handle existing data
+    where: {
+      wolframId: "Circle", // look for exisitng record with this id
+    },
+    update: {}, // do nothing if record exists
+    create: {
+      // if not found, create new record
       name: "Circle",
       wolframId: "Circle",
       description: "A perfect circle",
       categoryId: category.id,
-      parameters: {
+      parameters: JSON.stringify({
         radius: {
           name: "radius",
           symbol: "r",
@@ -29,14 +39,14 @@ async function main() {
           x: 0,
           y: 0,
         },
-      },
-      equations: {
+      }),
+      equations: JSON.stringify({
         cartesian: "x² + y² = r²",
         parametric: {
           x: "r * cos(t)",
           y: "r * sin(t)",
         },
-      },
+      }),
     },
   });
 }
