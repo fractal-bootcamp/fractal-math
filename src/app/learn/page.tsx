@@ -21,7 +21,7 @@ export default function LearnPage() {
             <Sidebar />
             <main className="flex-1 overflow-auto">
                 <div className="container mx-auto px-4 py-8">
-                    <h1 className="text-3xl font-bold mb-6 text-white">Mathematical Concepts</h1>
+                    <h1 className="text-3xl font-bold mb-6 text-white text-center">Mathematical Concepts</h1>
                     <div className="w-full h-[600px] border border-gray-800 rounded-lg bg-black/50">
                         <ConceptFlow />
                     </div>
