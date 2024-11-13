@@ -3,6 +3,47 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { CurveInfo, CurveResponse } from "@/types/curveTypes";
 
+function formatEquation(eq: string) {
+  try {
+    const parsed = JSON.parse(eq);
+    return (
+      <div>
+        {parsed.cartesian && (
+          <div>
+            <strong>Cartesian:</strong> {parsed.cartesian}
+          </div>
+        )}
+        {parsed.parametric && (
+          <div>
+            <strong>Parametric:</strong>x = {parsed.parametric.x}, y ={" "}
+            {parsed.parametric.y}
+          </div>
+        )}
+      </div>
+    );
+  } catch (e) {
+    return eq;
+  }
+}
+
+function formatParameters(params: string) {
+  try {
+    const parsed = JSON.parse(params);
+    return (
+      <div className="space-y-2">
+        {Object.entries(parsed).map(([key, value]: [string, any]) => (
+          <div key={key}>
+            <strong>{value.name}</strong> ({value.symbol}): {value.defaultValue}
+            {value.range && <span> Range: [{value.range.join(" to ")}]</span>}
+          </div>
+        ))}
+      </div>
+    );
+  } catch (e) {
+    return params;
+  }
+}
+
 export default function TestCurves() {
   const [curves, setCurves] = useState<CurveInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,9 +84,20 @@ export default function TestCurves() {
               <p className="text-sm text-gray-600">{curve.description}</p>
             </CardHeader>
             <CardContent>
-              <pre className="text-sm bg-gray-50 p-2 rounded">
-                {JSON.stringify(curve, null, 2)}
-              </pre>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold">Equations:</h3>
+                  {formatEquation(curve.equations)}
+                </div>
+                <div>
+                  <h3 className="font-semibold">Parameters:</h3>
+                  {formatParameters(curve.parameters)}
+                </div>
+                <div>
+                  <h3 className="font-semibold">Category:</h3>
+                  <p>{curve.category.name}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}
