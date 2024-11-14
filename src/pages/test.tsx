@@ -1,47 +1,44 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { CurveInfo, CurveResponse } from "@/types/curveTypes";
+import { CurveInfo, Parameter, Equation } from "@/types/curveTypes";
 
-function formatEquation(eq: string) {
-  try {
-    const parsed = JSON.parse(eq);
-    return (
-      <div>
-        {parsed.cartesian && (
-          <div>
-            <strong>Cartesian:</strong> {parsed.cartesian}
-          </div>
-        )}
-        {parsed.parametric && (
-          <div>
-            <strong>Parametric:</strong>x = {parsed.parametric.x}, y ={" "}
-            {parsed.parametric.y}
-          </div>
-        )}
-      </div>
-    );
-  } catch (e) {
-    return eq;
-  }
+function formatEquation(eq: Equation[]) {
+  return (
+    <div>
+      {eq.map((equation, index) => (
+        <div key={index}>
+          {equation.cartesian && (
+            <div>
+              <strong>Cartesian:</strong> {equation.cartesian}
+            </div>
+          )}
+          {equation.parametric && (
+            <div>
+              <strong>Parametric:</strong>x = {equation.parametric.x}, y ={" "}
+              {equation.parametric.y}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
-function formatParameters(params: string) {
-  try {
-    const parsed = JSON.parse(params);
-    return (
-      <div className="space-y-2">
-        {Object.entries(parsed).map(([key, value]: [string, any]) => (
+function formatParameters(params: Record<string, Parameter>) {
+  return (
+    <div className="space-y-2">
+      {Object.entries(params).map(([key, value]) => {
+        const param = value as Parameter;
+        return (
           <div key={key}>
-            <strong>{value.name}</strong> ({value.symbol}): {value.defaultValue}
-            {value.range && <span> Range: [{value.range.join(" to ")}]</span>}
+            <strong>{param.name}</strong> ({param.symbol}): {param.defaultValue}
+            {param.range && <span> Range: [{param.range.join(" to ")}]</span>}
           </div>
-        ))}
-      </div>
-    );
-  } catch (e) {
-    return params;
-  }
+        );
+      })}
+    </div>
+  );
 }
 
 export default function TestCurves() {
@@ -95,7 +92,7 @@ export default function TestCurves() {
                 </div>
                 <div>
                   <h3 className="font-semibold">Category:</h3>
-                  <p>{curve.category.name}</p>
+                  <p>{curve.categoryId}</p>
                 </div>
               </div>
             </CardContent>

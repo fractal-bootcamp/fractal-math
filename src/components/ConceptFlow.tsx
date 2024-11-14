@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import ConceptCards from "./ConceptCards";
+// import { useSession } from "next-auth/react";
 
 // Define the structure for node data
 interface NodeData extends d3.SimulationNodeDatum {
@@ -26,9 +27,17 @@ interface DragEvent extends d3.D3DragEvent<SVGGElement, NodeData, NodeData> {
   subject: NodeData;
 }
 
+// interface ConceptData {
+//   id: string;
+//   title: string;
+//   content: string;
+
+// }
+
 export default function ConceptFlow() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedConcept, setSelectedConcept] = useState<string | null>(null);
+  //   const { data: session } = useSession();
 
   // Move these inside useEffect to avoid the dependency warning
   // while maintaining the exact same functionality
@@ -237,23 +246,79 @@ export default function ConceptFlow() {
     fetchCurveData();
   }, []);
 
-  const handleConceptComplete = (conceptId: string) => {
+  const handleConceptComplete = async (conceptId: string) => {
+    try {
+      // Call the API endpoint
+      const response = await fetch("/api/user-progress", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          curveId: conceptId,
+          status: "completed",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update progress");
+      }
+
+      // Update UI
+      setSelectedConcept(null);
+      const node = d3.select(`circle[data-id="${conceptId}"]`);
+      node.attr("stroke", "#4CAF50").attr("stroke-width", 4);
+    } catch (error) {
+      console.error("Error marking concept as complete:", error);
+      // You might want to add error handling UI here
+    }
+  };
+
+  const handleOverlayClick = () => {
     setSelectedConcept(null);
-    const node = d3.select(`circle[data-id="${conceptId}"]`);
-    node.attr("stroke", "#4CAF50").attr("stroke-width", 4);
   };
 
   return (
-    <div className="absolute inset-0">
-      <div ref={containerRef} className="w-full h-full" />
-      {selectedConcept && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4">
-          <ConceptCards
-            conceptId={selectedConcept}
-            onComplete={handleConceptComplete}
-          />
-        </div>
-      )}
+    <div className="w-full h-full transition-all duration-300 ease-in-out">
+      <div ref={containerRef} className="w-full h-full">
+        {selectedConcept && (
+          <div
+            className="absolute inset-0 bg-black/50 flex items-center justify-center p-4"
+            onClick={handleOverlayClick}
+          >
+            <div
+              className="relative bg-gray-800 rounded-lg p-6 max-w-2xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedConcept(null)}
+                className="absolute top-4 right-4 z-50 text-gray-400 hover:text-white cursor-pointer"
+                aria-label="Close"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              <ConceptCards
+                conceptId={selectedConcept}
+                onComplete={() => handleConceptComplete(selectedConcept!)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
