@@ -22,11 +22,11 @@ export default function LearnPage() {
     <div className="flex h-screen bg-black">
       <Sidebar onModuleChange={setActiveModule} />
       <main className="flex-1">
-        <div className="h-full w-full flex flex-col items-center p-8">
-          <h1 className="text-2xl font-bold text-white mb-4 p-10">
+        <div className="h-full w-full flex flex-col items-center">
+          <h1 className="text-2xl font-bold text-white mb-4 p-10 mt-16">
             Allgebraic Curves
           </h1>
-          <div className="w-full max-w-[1200px] aspect-[16/9] bg-black/50 rounded-lg relative">
+          <div className="w-full h-full bg-black/50 rounded-lg relative">
             <ConceptFlow />
           </div>
         </div>
