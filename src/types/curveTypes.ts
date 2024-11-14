@@ -13,8 +13,11 @@ export interface Point {
 }
 
 export interface Equation {
-  type: "cartesian" | "parametric";
-  expression: string;
+  cartesian?: string;
+  parametric?: {
+    x: string;
+    y: string;
+  };
 }
 
 export interface Category {

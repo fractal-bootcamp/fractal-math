@@ -1,15 +1,12 @@
 import { useState, useEffect } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+// import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface ConceptCardProps {
   conceptId: string;
   onComplete: () => void;
 }
 
-export default function ConceptCards({
-  conceptId,
-  onComplete,
-}: ConceptCardProps) {
+export default function ConceptCards({ conceptId }: ConceptCardProps) {
   const [curveData, setCurveData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,12 +57,6 @@ export default function ConceptCards({
     <div className="bg-gray-900 p-6 rounded-lg max-w-2xl w-full mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-white">{curveData.name}</h2>
-        <button
-          onClick={() => onComplete()}
-          className="text-gray-400 hover:text-white"
-        >
-          <XMarkIcon className="h-6 w-6" />
-        </button>
       </div>
 
       <div className="space-y-4">
