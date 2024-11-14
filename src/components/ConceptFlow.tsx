@@ -33,6 +33,7 @@ interface DragEvent extends d3.D3DragEvent<SVGGElement, NodeData, NodeData> {
 //   content: string;
 
 // }
+const NODE_RADIUS = 28; // Bigger circles
 
 export default function ConceptFlow() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -46,200 +47,153 @@ export default function ConceptFlow() {
       try {
         const response = await fetch("/api/curves");
         const curves = await response.json();
-        if (curves.length > 0) {
-          // Use all curves instead of just the first 5
-          const initialNodes: NodeData[] = curves.map(
-            (curve: { id: string; name: string }) => ({
-              id: curve.id,
-              label: curve.name,
-              comfort: null,
-            })
-          );
 
-          // Create a more connected graph structure
-          // Each node connects to the next one in sequence, creating a chain
-          const initialLinks: LinkData[] = [];
-          for (let i = 0; i < initialNodes.length - 1; i++) {
-            initialLinks.push({
-              source: initialNodes[i].id,
-              target: initialNodes[i + 1].id,
-            });
-            // Add some cross connections for every third node
-            if (i % 3 === 0 && i + 3 < initialNodes.length) {
-              initialLinks.push({
-                source: initialNodes[i].id,
-                target: initialNodes[i + 3].id,
-              });
-            }
-          }
+        if (!containerRef.current) return;
 
-          if (!containerRef.current) return;
+        // Get container dimensions
+        const container = containerRef.current;
+        const bounds = container.getBoundingClientRect();
+        const width = bounds.width;
+        const height = bounds.height;
 
-          // Clear any existing SVG
-          d3.select(containerRef.current).selectAll("svg").remove();
+        // Clear any existing SVG
+        d3.select(containerRef.current).selectAll("svg").remove();
 
-          // Get the container dimensions
-          const container = containerRef.current;
-          const width = container.clientWidth;
-          const height = container.clientHeight;
+        // Create SVG with container dimensions
+        const svg = d3
+          .select(containerRef.current)
+          .append("svg")
+          .attr("width", "100%")
+          .attr("height", "100%")
+          .attr("viewBox", [0, 0, width, height]);
 
-          const svg = d3
-            .select(containerRef.current)
-            .append("svg")
-            .attr("width", "100%")
-            .attr("height", "100%")
-            .attr("viewBox", `0 0 ${width} ${height}`)
-            .append("g")
-            .attr("transform", `translate(${width / 2}, ${height / 2})`);
+        // Initialize nodes from curves
+        const nodes = curves.map((curve: { id: string; name: string }) => ({
+          id: curve.id,
+          label: curve.name,
+          comfort: null,
+          x: Math.random() * width,
+          y: Math.random() * height,
+        }));
 
-          const simulation = d3
-            .forceSimulation(initialNodes)
-            .force(
-              "link",
-              d3
-                .forceLink(initialLinks)
-                .id((d: any) => d.id)
-                .distance(100)
-            )
-            .force("charge", d3.forceManyBody().strength(-200))
-            .force("collision", d3.forceCollide().radius(60))
-            .force(
-              "radial",
-              d3.forceRadial(
-                Math.min(width, height) / 4, // Make radius relative to container size
-                0,
-                0
-              )
-            );
-
-          const links = svg
-            .append("g")
-            .selectAll("line")
-            .data(initialLinks)
-            .join("line")
-            .attr("stroke", (d) =>
-              ["2", "3"].includes(d.source as string) ? "#ff6b6b" : "#69db7c"
-            )
-            .attr("stroke-width", 2);
-
-          // Define the drag behavior before creating nodes
-          const drag = d3
-            .drag<SVGGElement, NodeData>()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended);
-
-          // Then create the nodes with the drag behavior
-          const nodes = svg
-            .selectAll(".node")
-            .data(initialNodes)
-            .join("g")
-            .attr("class", "node")
-            .call(drag as any)
-            .style("cursor", "pointer");
-
-          nodes
-            .append("circle")
-            .attr("r", 30)
-            .attr("fill", "#1a1a1a")
-            .attr("stroke", "#333")
-            .attr("stroke-width", 2)
-            .attr("class", "node-circle")
-            .style("transition", "all 0.3s ease")
-            .on("mouseenter", function () {
-              d3.select(this)
-                .attr("stroke", "#4f46e5")
-                .attr("stroke-width", 3)
-                .style("filter", "brightness(1.2)")
-                .attr("r", 33);
-            })
-            .on("mouseleave", function () {
-              d3.select(this)
-                .attr("stroke", "#333")
-                .attr("stroke-width", 2)
-                .style("filter", "none")
-                .attr("r", 30);
-            })
-            .on("click", function (event, d) {
-              d3.select(this)
-                .transition()
-                .duration(200)
-                .attr("r", 40)
-                .transition()
-                .duration(200)
-                .attr("r", 33);
-
-              setSelectedConcept(d.id);
-            });
-
-          nodes
-            .append("text")
-            .text((d: NodeData) => d.label)
-            .attr("text-anchor", "middle")
-            .attr("dy", ".35em")
-            .attr("fill", "white")
-            .style("pointer-events", "none")
-            .style("font-size", "12px");
-
-          simulation.on("tick", () => {
-            links
-              .attr("x1", (d) => {
-                const source = d.source as unknown as NodeData;
-                return source.x!;
-              })
-              .attr("y1", (d) => {
-                const source = d.source as unknown as NodeData;
-                return source.y!;
-              })
-              .attr("x2", (d) => {
-                const target = d.target as unknown as NodeData;
-                return target.x!;
-              })
-              .attr("y2", (d) => {
-                const target = d.target as unknown as NodeData;
-                return target.y!;
-              });
-
-            nodes.attr(
-              "transform",
-              (d: NodeData) => `translate(${d.x},${d.y})`
-            );
+        // Create links between nodes
+        const links = [];
+        for (let i = 0; i < nodes.length - 1; i++) {
+          links.push({
+            source: nodes[i].id,
+            target: nodes[i + 1].id,
           });
-
-          function dragstarted(event: DragEvent) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x;
-            event.subject.fy = event.subject.y;
-          }
-
-          function dragged(event: DragEvent) {
-            // Calculate the radius from center where nodes are allowed to move
-            const maxRadius = Math.min(width, height) / 2 - 40; // 40px padding
-
-            // Calculate distance from center
-            const dx = event.x;
-            const dy = event.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            // If distance is greater than maxRadius, scale the coordinates back
-            if (distance > maxRadius) {
-              const scale = maxRadius / distance;
-              event.subject.fx = dx * scale;
-              event.subject.fy = dy * scale;
-            } else {
-              event.subject.fx = event.x;
-              event.subject.fy = event.y;
-            }
-          }
-
-          function dragended(event: DragEvent) {
-            if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
+          // Add some cross connections for every third node
+          if (i % 3 === 0 && i + 3 < nodes.length) {
+            links.push({
+              source: nodes[i].id,
+              target: nodes[i + 3].id,
+            });
           }
         }
+
+        // Modify the force simulation to respect bounds
+        const simulation = d3
+          .forceSimulation(nodes)
+          .force(
+            "link",
+            d3
+              .forceLink(links)
+              .id((d) => d.id)
+              .distance(NODE_RADIUS)
+          )
+          .force("charge", d3.forceManyBody().strength(-200))
+          .force("center", d3.forceCenter(width / 2, height / 2))
+          .force("collision", d3.forceCollide().radius(NODE_RADIUS + 5))
+          // Add boundary force
+          .force("bounds", () => {
+            for (let node of nodes) {
+              node.x = Math.max(30, Math.min(width - 30, node.x));
+              node.y = Math.max(30, Math.min(height - 30, node.y));
+            }
+          });
+
+        // Add links to SVG
+        const link = svg
+          .append("g")
+          .selectAll("line")
+          .data(links)
+          .join("line")
+          .attr("stroke", "#999")
+          .attr("stroke-opacity", 0.6)
+          .attr("stroke-width", 1);
+
+        // Modify drag behavior to work with groups
+        const drag = d3.drag<SVGGElement, NodeData>().on("drag", (event, d) => {
+          d.x = Math.max(30, Math.min(width - 30, event.x));
+          d.y = Math.max(30, Math.min(height - 30, event.y));
+          simulation.alpha(1).restart();
+        });
+
+        // Create node groups
+        const nodeGroup = svg
+          .append("g")
+          .selectAll("g")
+          .data(nodes)
+          .join("g")
+          .call(drag as any);
+
+        // Add circles to each node group
+        nodeGroup
+          .append("circle")
+          .attr("r", NODE_RADIUS)
+          .attr("fill", "#4CAF50")
+          .attr("cursor", "pointer")
+          .on("click", (event, d) => {
+            setSelectedConcept(d.id);
+          });
+
+        // Add labels to each node group
+        nodeGroup
+          .append("text")
+          .text((d) => d.label)
+          .attr("text-anchor", "middle")
+          .attr("dy", "0.3em")
+          .attr("fill", "white")
+          .attr("font-size", "14px")
+          .attr("pointer-events", "none");
+
+        // Update the simulation tick function
+        simulation.on("tick", () => {
+          link
+            .attr("x1", (d) => Math.max(30, Math.min(width - 30, d.source.x)))
+            .attr("y1", (d) => Math.max(30, Math.min(height - 30, d.source.y)))
+            .attr("x2", (d) => Math.max(30, Math.min(width - 30, d.target.x)))
+            .attr("y2", (d) => Math.max(30, Math.min(height - 30, d.target.y)));
+
+          // Move the entire group together
+          nodeGroup.attr("transform", (d) => {
+            const x = Math.max(30, Math.min(width - 30, d.x));
+            const y = Math.max(30, Math.min(height - 30, d.y));
+            return `translate(${x},${y})`;
+          });
+        });
+
+        // Optional: Add hover effects to the entire group
+        nodeGroup
+          .on("mouseover", function () {
+            d3.select(this)
+              .select("circle")
+              .transition()
+              .duration(200)
+              .attr("r", NODE_RADIUS + 2)
+              .attr("fill", "#45a049");
+          })
+          .on("mouseout", function () {
+            d3.select(this)
+              .select("circle")
+              .transition()
+              .duration(200)
+              .attr("r", NODE_RADIUS)
+              .attr("fill", "#4CAF50");
+          });
       } catch (error) {
-        console.error("Error fetching curve:", error);
+        console.error("Error fetching curves:", error);
       }
     };
 

@@ -4,9 +4,7 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const id = params.id;
-
-  const curveData = {
+  const curves = {
     "1": {
       id: "1",
       name: "Line",
@@ -137,13 +135,174 @@ export async function GET(
         "Area = 3πa²",
       ],
     },
+    "11": {
+      id: "11",
+      name: "Cubic",
+      description: "A curve defined by a third-degree polynomial equation",
+      examples: ["y = ax³ + bx² + cx + d", "x³ + y³ = 3axy"],
+      properties: [
+        "Can have up to three real roots",
+        "At least one real root",
+        "Point of inflection",
+        "Algebraic degree 3",
+      ],
+    },
+    "12": {
+      id: "12",
+      name: "Folium of Descartes",
+      description:
+        "A curve with a leaf-like shape, discovered by René Descartes",
+      examples: ["x³ + y³ = 3axy", "r = 3a sin(θ)cos(θ)/(sin³(θ) + cos³(θ))"],
+      properties: [
+        "Single leaf shape",
+        "One double point",
+        "Asymptote x + y + a = 0",
+        "Algebraic degree 3",
+      ],
+    },
+    "13": {
+      id: "13",
+      name: "Witch of Agnesi",
+      description:
+        "A curve studied by Maria Agnesi, with applications in probability",
+      examples: ["y = 8a³/(x² + 4a²)", "y = a(1 + cos(θ))"],
+      properties: [
+        "Bell-shaped curve",
+        "Horizontal asymptote y = 0",
+        "Maximum height at x = 0",
+        "Area = 4πa²",
+      ],
+    },
+    "14": {
+      id: "14",
+      name: "Butterfly",
+      description: "A transcendental curve that resembles butterfly wings",
+      examples: [
+        "x = sin(t)(e^cos(t) - 2cos(4t) - sin^5(t/12))",
+        "y = cos(t)(e^cos(t) - 2cos(4t) - sin^5(t/12))",
+      ],
+      properties: [
+        "Symmetrical about both axes",
+        "Transcendental curve",
+        "Periodic pattern",
+        "Wing-like structure",
+      ],
+    },
+    "15": {
+      id: "15",
+      name: "Maltese Cross",
+      description: "A curve forming a cross-like shape with eight cusps",
+      examples: ["r = a√(2cos(2θ))", "r = a√(2sin(2θ))"],
+      properties: [
+        "Eight cusps",
+        "Four-fold symmetry",
+        "Cross formation",
+        "Algebraic curve",
+      ],
+    },
+    "16": {
+      id: "16",
+      name: "Devil's Curve",
+      description: "A quartic curve with a distinctive shape resembling horns",
+      examples: ["(x² + y²)³ = 4x²y²", "(r²)³ = 4(cos²θ)(sin²θ)"],
+      properties: [
+        "Four loops",
+        "Double point at origin",
+        "Symmetrical about both axes",
+        "Quartic curve",
+      ],
+    },
+    "17": {
+      id: "17",
+      name: "Algebraic Oval",
+      description: "A curve formed by two ovals connected by a line",
+      examples: ["(x² + y²)² = a²(x² - y²)", "(r²)² = a²(cos²θ - sin²θ)"],
+      properties: [
+        "Two ovals",
+        "One line",
+        "Symmetrical about both axes",
+        "Algebraic curve",
+      ],
+    },
+    "18": {
+      id: "18",
+      name: "Heart-Shaped Curve",
+      description: "A curve resembling a heart shape",
+      examples: ["r = a(1 + cos(θ))", "r = 2a(1 + cos(θ))"],
+      properties: [
+        "Heart-shaped",
+        "One cusp",
+        "Special case of limacon",
+        "Area = 6πa²",
+      ],
+    },
+    "19": {
+      id: "19",
+      name: "Transcendental Curve",
+      description: "A curve that cannot be expressed as a polynomial",
+      examples: [
+        "x = sin(t)(e^cos(t) - 2cos(4t) - sin^5(t/12))",
+        "y = cos(t)(e^cos(t) - 2cos(4t) - sin^5(t/12))",
+      ],
+      properties: [
+        "Symmetrical about both axes",
+        "Transcendental curve",
+        "Periodic pattern",
+        "Wing-like structure",
+      ],
+    },
+    "20": {
+      id: "20",
+      name: "Sextic Curve",
+      description: "A curve defined by a sixth-degree polynomial equation",
+      examples: [
+        "y = ax^6 + bx^5 + cx^4 + dx^3 + ex^2 + fx + g",
+        "x^6 + y^6 = 3axy",
+      ],
+      properties: [
+        "Can have up to six real roots",
+        "At least one real root",
+        "Point of inflection",
+        "Algebraic degree 6",
+      ],
+    },
+    "21": {
+      id: "21",
+      name: "Mechanical Curve",
+      description: "A curve formed by a mechanical system",
+      examples: ["y = a(1 + cos(θ))", "r = 2a(1 + cos(θ))"],
+      properties: [
+        "Heart-shaped",
+        "One cusp",
+        "Special case of limacon",
+        "Area = 6πa²",
+      ],
+    },
+    "22": {
+      id: "22",
+      name: "Quartic Curve",
+      description: "A curve defined by a fourth-degree polynomial equation",
+      examples: ["y = ax^4 + bx^3 + cx^2 + dx + e", "x^4 + y^4 = 3axy"],
+      properties: [
+        "Can have up to four real roots",
+        "At least one real root",
+        "Point of inflection",
+        "Algebraic degree 4",
+      ],
+    },
+    "23": {
+      id: "23",
+      name: "Quintic Curve",
+      description: "A curve defined by a fifth-degree polynomial equation",
+      examples: ["y = ax^5 + bx^4 + cx^3 + dx^2 + ex + f", "x^5 + y^5 = 3axy"],
+      properties: [
+        "Can have up to five real roots",
+        "At least one real root",
+        "Point of inflection",
+        "Algebraic degree 5",
+      ],
+    },
   };
 
-  const data = curveData[id as keyof typeof curveData];
-
-  if (!data) {
-    return NextResponse.json({ error: "Curve not found" }, { status: 404 });
-  }
-
-  return NextResponse.json(data);
+  return NextResponse.json(curves[params.id] ?? null);
 }
