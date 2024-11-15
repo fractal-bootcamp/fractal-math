@@ -33,6 +33,7 @@ export interface CurveInfo {
   categoryId: string;
   parameters: Record<string, Parameter>;
   equations: Equation[];
+  visualizationPoints?: [number, number, number][];
 }
 
 export interface CurveResponse {

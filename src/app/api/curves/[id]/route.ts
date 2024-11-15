@@ -5,6 +5,15 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const curves = {
+    visualizationPoints: Array.from({ length: 50 }, (_, i) => {
+      const angle = (i / 50) * Math.PI * 2;
+      const radius = 2; // Size of the circle
+      return [
+        radius * Math.cos(angle), // x
+        radius * Math.sin(angle), // y
+        0, // z
+      ] as [number, number, number];
+    }),
     "1": {
       id: "1",
       name: "Line",
@@ -17,6 +26,7 @@ export async function GET(
         "Shortest path between two points",
         "Infinite length",
       ],
+      visualizationPoints: [],
     },
     "2": {
       id: "2",
@@ -43,6 +53,7 @@ export async function GET(
         "Conic section",
         "Reflective property",
       ],
+      visualizationPoints: [],
     },
     "4": {
       id: "4",
@@ -56,6 +67,7 @@ export async function GET(
         "Closed curve",
         "Eccentricity < 1",
       ],
+      visualizationPoints: [],
     },
     "5": {
       id: "5",
@@ -69,6 +81,7 @@ export async function GET(
         "Two foci",
         "Eccentricity > 1",
       ],
+      visualizationPoints: [],
     },
     "6": {
       id: "6",
@@ -82,6 +95,7 @@ export async function GET(
         "Period = 2π",
         "Odd function",
       ],
+      visualizationPoints: [],
     },
     "7": {
       id: "7",
@@ -95,6 +109,7 @@ export async function GET(
         "Special case of limacon",
         "Area = 6πa²",
       ],
+      visualizationPoints: [],
     },
     "8": {
       id: "8",
@@ -108,6 +123,7 @@ export async function GET(
         "One self-intersection",
         "Symmetric about both axes",
       ],
+      visualizationPoints: [],
     },
     "9": {
       id: "9",
@@ -121,6 +137,7 @@ export async function GET(
         "Not a parabola",
         "Symmetric about y-axis",
       ],
+      visualizationPoints: [],
     },
     "10": {
       id: "10",
@@ -134,6 +151,7 @@ export async function GET(
         "Period = 2πa",
         "Area = 3πa²",
       ],
+      visualizationPoints: [],
     },
     "11": {
       id: "11",
@@ -146,6 +164,7 @@ export async function GET(
         "Point of inflection",
         "Algebraic degree 3",
       ],
+      visualizationPoints: [],
     },
     "12": {
       id: "12",
@@ -159,6 +178,7 @@ export async function GET(
         "Asymptote x + y + a = 0",
         "Algebraic degree 3",
       ],
+      visualizationPoints: [],
     },
     "13": {
       id: "13",
@@ -172,6 +192,7 @@ export async function GET(
         "Maximum height at x = 0",
         "Area = 4πa²",
       ],
+      visualizationPoints: [],
     },
     "14": {
       id: "14",
@@ -187,6 +208,7 @@ export async function GET(
         "Periodic pattern",
         "Wing-like structure",
       ],
+      visualizationPoints: [],
     },
     "15": {
       id: "15",
@@ -199,6 +221,7 @@ export async function GET(
         "Cross formation",
         "Algebraic curve",
       ],
+      visualizationPoints: [],
     },
     "16": {
       id: "16",
@@ -211,6 +234,7 @@ export async function GET(
         "Symmetrical about both axes",
         "Quartic curve",
       ],
+      visualizationPoints: [],
     },
     "17": {
       id: "17",
@@ -223,6 +247,7 @@ export async function GET(
         "Symmetrical about both axes",
         "Algebraic curve",
       ],
+      visualizationPoints: [],
     },
     "18": {
       id: "18",
@@ -235,6 +260,7 @@ export async function GET(
         "Special case of limacon",
         "Area = 6πa²",
       ],
+      visualizationPoints: [],
     },
     "19": {
       id: "19",
@@ -250,6 +276,7 @@ export async function GET(
         "Periodic pattern",
         "Wing-like structure",
       ],
+      visualizationPoints: [],
     },
     "20": {
       id: "20",
@@ -265,6 +292,7 @@ export async function GET(
         "Point of inflection",
         "Algebraic degree 6",
       ],
+      visualizationPoints: [],
     },
     "21": {
       id: "21",
@@ -277,6 +305,7 @@ export async function GET(
         "Special case of limacon",
         "Area = 6πa²",
       ],
+      visualizationPoints: [],
     },
     "22": {
       id: "22",
@@ -289,6 +318,7 @@ export async function GET(
         "Point of inflection",
         "Algebraic degree 4",
       ],
+      visualizationPoints: [],
     },
     "23": {
       id: "23",
@@ -301,6 +331,7 @@ export async function GET(
         "Point of inflection",
         "Algebraic degree 5",
       ],
+      visualizationPoints: [],
     },
   };
 
