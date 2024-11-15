@@ -9,7 +9,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="h-screen w-screen overflow-hidden">
         <Providers>
           <Navigation />
           {children}

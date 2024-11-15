@@ -11,10 +11,9 @@ export default function Home() {
 
   if (status === "authenticated") {
     return (
-      <div>
-        <h1>Welcome, {session.user?.name}!</h1>
+      <main className="h-screen w-screen overflow-hidden">
         <FractalLanding />
-      </div>
+      </main>
     );
   }
 
