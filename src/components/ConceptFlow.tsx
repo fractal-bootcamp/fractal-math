@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import dynamic from "next/dynamic";
 import { CurveInfo } from "@/types/curveTypes";
+import { AIChatbot } from "./AIChatbot";
 
 const CurveVisualization = dynamic(() => import("./CurveVisualization"), {
   ssr: false,
@@ -325,6 +326,7 @@ export default function ConceptFlow() {
           </div>
         )}
       </div>
+      <AIChatbot />
     </div>
   );
 }
