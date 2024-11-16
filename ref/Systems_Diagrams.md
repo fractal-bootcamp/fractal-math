@@ -78,3 +78,4 @@ graph LR
     class PostgreSQL,Models,Users,Curves,Categories,Progress,CodeSnippets data;
     class Auth,APIs,Services backend;
 ```
+

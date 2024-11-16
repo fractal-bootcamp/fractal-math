@@ -109,12 +109,56 @@ subgraph Application_Architecture["Application Architecture"]
 end
 
 %% Styling
-classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px;
-classDef layer fill:#e4f0f8,stroke:#333,stroke-width:2px;
-classDef root fill:#f8d7da,stroke:#721c24,stroke-width:3px;
-classDef component fill:#d4edda,stroke:#155724,stroke-width:2px;
-classDef data fill:#fff3cd,stroke:#856404,stroke-width:2px;
-classDef backend fill:#cce5ff,stroke:#004085,stroke-width:2px;
+classDef default fill:#1a1a1a,stroke:#666,stroke-width:2px,color:#fff;
+classDef layer fill:#2a2a2a,stroke:#666,stroke-width:2px,color:#fff;
+classDef root fill:#3c1f23,stroke:#ff9999,stroke-width:3px,color:#ff9999;
+classDef component fimermaid
+graph TD
+subgraph Application_Architecture
+Root[Application Root]
+subgraph Frontend_Layer
+Pages[Pages]
+Components[Components]
+Hooks[Custom Hooks]
+Utils[Utilities]
+end
+subgraph Data_Layer
+State[State Management]
+APIs[API Integration]
+Auth[Authentication]
+end
+subgraph Backend_Layer
+Routes[API Routes]
+Middleware[Middleware]
+DB[Database]
+end
+%% Frontend Connections
+Root --> Frontend_Layer
+Root --> Data_Layer
+Root --> Backend_Layer
+%% Frontend Details
+Pages --> |Uses| Components
+Pages --> |Uses| Hooks
+Components --> |Uses| Hooks
+Components --> |Uses| Utils
+%% Data Layer Connections
+State --> |Updates| Components
+APIs --> |Feeds| State
+Auth --> |Secures| APIs
+%% Backend Connections
+Routes --> |Validates| Middleware
+Routes --> |Queries| DB
+Auth --> |Protects| Routes
+%% Cross-layer Interactions
+Components --> |Calls| APIs
+APIs --> |Requests| Routes
+end
+%% Styling
+classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px
+classDef layer fill:#e4f0f8,stroke:#333,stroke-width:2px
+class Frontend_Layer,Data_Layer,Backend_Layer layerll:#1f3326,stroke:#4caf50,stroke-width:2px,color:#4caf50;
+classDef data fill:#332b1f,stroke:#ffc107,stroke-width:2px,color:#ffc107;
+classDef backend fill:#1f2938,stroke:#64b5f6,stroke-width:2px,color:#64b5f6;
 
 class Root root;
 class Pages,Components,Hooks,Utils component;
