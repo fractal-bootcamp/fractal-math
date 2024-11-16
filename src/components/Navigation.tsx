@@ -1,6 +1,7 @@
 "use client"
 import Link from 'next/link';
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { PeerCollaborators } from './PeerCollaborators';
 
 const Navigation = () => {
     const { data: session, status } = useSession();
@@ -21,9 +22,12 @@ const Navigation = () => {
                                 About
                             </Link>
                             {status === "authenticated" && (
-                                <Link href="/learn" className="text-gray-300 hover:text-white transition-colors">
-                                    Learn
-                                </Link>
+                                <>
+                                    <Link href="/learn" className="text-gray-300 hover:text-white transition-colors">
+                                        Learn
+                                    </Link>
+                                    <PeerCollaborators />
+                                </>
                             )}
                             {status === "authenticated" ? (
                                 <div className="flex items-center space-x-4">

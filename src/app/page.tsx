@@ -2,7 +2,7 @@
 import { useSession, signIn } from "next-auth/react";
 import { useState } from "react";
 import FractalLanding from "../components/MandelbrotSet";
-import ConceptExplorer from "../components/ConceptExplorer";
+import ConceptExplorer from "@/modules/knowledgeGraph/ConceptExplorer";
 import { ConceptNode, Edge } from "../types/conceptTypes";
 
 // Sample data - replace with actual data from your API

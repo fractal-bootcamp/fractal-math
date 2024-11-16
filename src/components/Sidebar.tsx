@@ -12,12 +12,12 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LearningPathwayModule } from "@/Modules/DashboardModules/LearningPathwayModule";
-import { CodeRepositoryModule } from "@/Modules/DashboardModules/CodeRepositoryModule";
-import { PeerCollaborationModule } from "@/Modules/DashboardModules/PeerCollaborationModule";
-import { ProgressAnalyticsModule } from "@/Modules/DashboardModules/ProgressAnalyticsModule";
-import { NotificationsModule } from "@/Modules/DashboardModules/NotificationsModule";
-import { SettingsModule } from "@/Modules/DashboardModules/SettingsModule";
+import { LearningPathwayModule } from "@/modules/dashboardModules/LearningPathwayModule";
+import { CodeRepositoryModule } from "@/modules/dashboardModules/CodeRepositoryModule";
+import { PeerCollaborationModule } from "@/modules/dashboardModules/PeerCollaborationModule";
+import { ProgressAnalyticsModule } from "@/modules/dashboardModules/ProgressAnalyticsModule";
+import { NotificationsModule } from "@/modules/dashboardModules/NotificationsModule";
+import { SettingsModule } from "@/modules/dashboardModules/SettingsModule";
 
 interface SidebarProps {
   onModuleChange?: (moduleId: string | null) => void;

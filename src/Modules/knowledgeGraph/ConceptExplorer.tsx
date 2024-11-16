@@ -2,10 +2,10 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MathConceptVisualization from './MathConceptVisualization';
+import { MathConceptVisualization } from './MathConceptVisualization';
 import { Mafs, Coordinates, Plot } from "mafs";
 import "mafs/core.css";
-import { ConceptNode, Edge } from '../types/conceptTypes';
+import { ConceptNode, Edge } from '@/types/conceptTypes';
 
 interface ConceptExplorerProps {
   initialConcept: string;
@@ -75,10 +75,6 @@ export default function ConceptExplorer({
                 nodes={nodes}
                 edges={edges}
                 onLearnMore={handleLearnMore}
-                onBuild={(nodeId) => {
-                  // Handle build action
-                  console.log('Build:', nodeId);
-                }}
               />
             </motion.div>
           ) : (
@@ -99,15 +95,7 @@ export default function ConceptExplorer({
                 >
                   <Coordinates />
                   {activeConcept?.equation && (
-                    <Plot.OfX y={(x) => {
-                      try {
-                        // Safely evaluate the equation with parameters
-                        const { a, b, c } = parameters;
-                        return eval(activeConcept.equation);
-                      } catch (e) {
-                        return 0;
-                      }
-                    }} />
+                    <Plot.OfX y={(x) => eval(activeConcept.equation)} />
                   )}
                 </Mafs>
               </div>
