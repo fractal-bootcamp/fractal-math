@@ -129,9 +129,12 @@ const FractalLanding = () => {
 
         {/* Call to Action */}
         <div className="container mx-auto px-4 py-16 text-center space-x-4">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300">
+          <Link
+            href="/learn"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300 inline-block"
+          >
             Begin Your Journey
-          </button>
+          </Link>
           <Link
             href="/about"
             className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-colors duration-300 inline-block"
