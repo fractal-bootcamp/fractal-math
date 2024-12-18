@@ -24,7 +24,7 @@ export default function LearnPage() {
       <main className="flex-1">
         <div className="h-full w-full flex flex-col items-center">
           <h1 className="text-2xl font-bold text-white mb-4 p-10 mt-16">
-            Allgebraic Curves
+            Algebraic Curves
           </h1>
           <div className="w-full h-full bg-black/50 rounded-lg relative">
             <ConceptFlow />

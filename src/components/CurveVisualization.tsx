@@ -1,14 +1,166 @@
 "use client";
 
-import { Mafs, Coordinates, Plot, Theme, useStopwatch } from "mafs";
+import { Mafs, Coordinates, Plot } from "mafs";
 import "mafs/core.css";
 import { useState, useEffect, useCallback } from "react";
 import { ControlPanel } from "./ControlPanel";
 
+// Types
 interface CurveVisualizationProps {
   equation: string;
   initialParameters?: Record<string, number>;
   curveName: string;
+}
+
+// Constants
+const MIN_ZOOM = 0.1;
+const MAX_ZOOM = 20;
+const ZOOM_IN_FACTOR = 0.9;
+const ZOOM_OUT_FACTOR = 1.1;
+const DEFAULT_STEPS = 100; // default number of steps for parametric and polar rendering
+const FULL_ROTATION = Math.PI * 2;
+
+// Parameter description mapping
+const PARAMETER_DESCRIPTIONS: Record<string, Record<string, string>> = {
+  line: { a: "Adjust slope", b: "Move up/down" },
+  parabola: { a: "Change curve width", b: "Move left/right", c: "Move up/down" },
+  circle: { a: "Adjust radius" },
+  "sine curve": { a: "Change height", b: "Adjust frequency", c: "Shift phase" },
+};
+
+// Evaluate a Cartesian (y = f(x)) curve
+function evaluateEquation(
+  curveName: string,
+  params: Record<string, number>,
+  x: number
+) {
+  const { a, b, c } = params;
+
+  switch (curveName.toLowerCase()) {
+    case "line":
+      return a * x + b;
+
+    case "circle": {
+      const r = Math.abs(a);
+      const term = r * r - x * x;
+      return term >= 0 ? Math.sqrt(term) : NaN;
+    }
+
+    case "parabola":
+      return a * x * x + b * x + c;
+
+    case "ellipse": {
+      const major = Math.abs(a);
+      const minor = Math.abs(b || major);
+      const term = minor * minor * (1 - (x * x) / (major * major));
+      return term >= 0 ? Math.sqrt(term) : NaN;
+    }
+
+    case "hyperbola": {
+      const major = Math.abs(a);
+      const minor = Math.abs(b || major);
+      const term = (minor * minor * x * x) / (major * major) - minor * minor;
+      return term >= 0 ? Math.sqrt(term) : NaN;
+    }
+
+    case "sine curve":
+      return a * Math.sin(b * x + c);
+
+    default:
+      return 0;
+  }
+}
+
+// Generate points for parametric curves (like cycloid, cardioid, butterfly)
+function getParametricCurvePoints(
+  curveName: string,
+  params: Record<string, number>,
+  steps = DEFAULT_STEPS
+): [number, number][] {
+  const { a } = params;
+  const points: [number, number][] = [];
+
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * FULL_ROTATION;
+    let x = 0;
+    let y = 0;
+
+    switch (curveName.toLowerCase()) {
+      case "cycloid":
+        x = a * (t - Math.sin(t));
+        y = a * (1 - Math.cos(t));
+        break;
+      case "cardioid":
+        x = a * (2 * Math.cos(t) - Math.cos(2 * t));
+        y = a * (2 * Math.sin(t) - Math.sin(2 * t));
+        break;
+      case "butterfly":
+        x = Math.sin(t) * (Math.exp(Math.cos(t)) - 2 * Math.cos(4 * t));
+        y = Math.cos(t) * (Math.exp(Math.cos(t)) - 2 * Math.cos(4 * t));
+        break;
+      default:
+        break;
+    }
+
+    points.push([x, y]);
+  }
+
+  return points;
+}
+
+// Generate points for polar curves (like lemniscate, rose, maltese cross)
+function getPolarCurvePoints(
+  curveName: string,
+  params: Record<string, number>,
+  steps = DEFAULT_STEPS
+): [number, number][] {
+  const { a, b } = params;
+  const points: [number, number][] = [];
+
+  for (let i = 0; i <= steps; i++) {
+    const theta = (i / steps) * FULL_ROTATION;
+    let r = 0;
+
+    switch (curveName.toLowerCase()) {
+      case "lemniscate":
+      case "maltese cross":
+        r = a * Math.sqrt(Math.abs(Math.cos(2 * theta)));
+        break;
+      case "rose":
+        r = a * Math.cos((b ?? 1) * theta);
+        break;
+      default:
+        break;
+    }
+
+    const x = r * Math.cos(theta);
+    const y = r * Math.sin(theta);
+    points.push([x, y]);
+  }
+
+  return points;
+}
+
+// Check if the given curve is parametric
+function isParametricCurve(curveName: string): boolean {
+  return ["cycloid", "cardioid", "butterfly"].includes(curveName.toLowerCase());
+}
+
+// Check if the given curve is polar
+function isPolarCurve(curveName: string): boolean {
+  return ["lemniscate", "rose", "maltese cross"].includes(curveName.toLowerCase());
+}
+
+// Get parameter descriptions for the control panel
+function getParameterDescriptions(
+  curveName: string,
+  parameters: Record<string, number>
+): Record<string, string> {
+  const name = curveName.toLowerCase();
+  return PARAMETER_DESCRIPTIONS[name] ||
+    Object.fromEntries(
+      Object.keys(parameters).map((param) => [param, `Adjust ${param}`])
+    );
 }
 
 export default function CurveVisualization({
@@ -18,20 +170,21 @@ export default function CurveVisualization({
 }: CurveVisualizationProps) {
   const [parameters, setParameters] = useState(initialParameters);
   const [zoom, setZoom] = useState(5);
-  const minZoom = 0.1;
-  const maxZoom = 20;
 
   // Handle mouse wheel zoom
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    setZoom((prevZoom) => {
-      const zoomFactor = e.deltaY > 0 ? 1.1 : 0.9;
-      const newZoom = prevZoom * zoomFactor;
-      return Math.min(Math.max(newZoom, minZoom), maxZoom);
-    });
-  }, []);
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
+      e.preventDefault();
+      setZoom((prevZoom) => {
+        const zoomFactor = e.deltaY > 0 ? ZOOM_OUT_FACTOR : ZOOM_IN_FACTOR;
+        const newZoom = prevZoom * zoomFactor;
+        return Math.min(Math.max(newZoom, MIN_ZOOM), MAX_ZOOM);
+      });
+    },
+    []
+  );
 
-  // Add wheel event listener
+  // Add wheel event listener for zoom on mount
   useEffect(() => {
     const graphElement = document.getElementById("graph-container");
     if (graphElement) {
@@ -44,216 +197,69 @@ export default function CurveVisualization({
     };
   }, [handleWheel]);
 
-  // Helper function for parametric curves
-  const generateParametricPoints = (
-    xFunc: (t: number) => number,
-    yFunc: (t: number) => number,
-    tStart: number,
-    tEnd: number,
-    steps: number
-  ) => {
-    const points: [number, number][] = [];
-    for (let i = 0; i <= steps; i++) {
-      const t = tStart + (i / steps) * (tEnd - tStart);
-      points.push([xFunc(t), yFunc(t)]);
-    }
-    return points;
-  };
+  // Render a parametric curve if applicable
+  function renderParametricCurve() {
+    if (!isParametricCurve(curveName)) return null;
+    const points = getParametricCurvePoints(curveName, parameters);
+    return <Plot.Parametric xy={(t) => points[Math.floor(t * points.length)]} t={[0, 1]} />;
+  }
 
-  const evaluateEquation = (x: number) => {
-    switch (curveName.toLowerCase()) {
-      case "line":
-        return parameters.a * x + parameters.b;
+  // Render a polar curve if applicable
+  function renderPolarCurve() {
+    if (!isPolarCurve(curveName)) return null;
+    const points = getPolarCurvePoints(curveName, parameters);
+    return <Plot.Parametric xy={(t) => points[Math.floor(t * points.length)]} t={[0, 1]} />;
+  }
 
-      case "circle":
-        const r = Math.abs(parameters.a);
-        const term = r * r - x * x;
-        return term >= 0 ? Math.sqrt(term) : NaN;
+  // Render a standard Cartesian curve if neither parametric nor polar
+  function renderCartesianCurve() {
+    if (isParametricCurve(curveName) || isPolarCurve(curveName)) return null;
 
-      case "parabola":
-        return parameters.a * x * x + parameters.b * x + parameters.c;
-
-      case "ellipse":
-        const a = Math.abs(parameters.a);
-        const b = Math.abs(parameters.b || a);
-        const termE = b * b * (1 - (x * x) / (a * a));
-        return termE >= 0 ? Math.sqrt(termE) : NaN;
-
-      case "hyperbola":
-        const aH = Math.abs(parameters.a);
-        const bH = Math.abs(parameters.b || aH);
-        const termH = (bH * bH * x * x) / (aH * aH) - bH * bH;
-        return termH >= 0 ? Math.sqrt(termH) : NaN;
-
-      case "sine curve":
-        return parameters.a * Math.sin(parameters.b * x + parameters.c);
-
-      default:
-        return 0;
-    }
-  };
-
-  // Add parametric curve handling
-  const renderParametricCurve = () => {
-    if (
-      !["cycloid", "cardioid", "butterfly"].includes(curveName.toLowerCase())
-    ) {
-      return null;
-    }
-
-    const points: [number, number][] = [];
-    const numPoints = 100;
-
-    for (let i = 0; i <= numPoints; i++) {
-      const t = (i / numPoints) * Math.PI * 2;
-      let x, y;
-
-      switch (curveName.toLowerCase()) {
-        case "cycloid":
-          x = parameters.a * (t - Math.sin(t));
-          y = parameters.a * (1 - Math.cos(t));
-          break;
-
-        case "cardioid":
-          x = parameters.a * (2 * Math.cos(t) - Math.cos(2 * t));
-          y = parameters.a * (2 * Math.sin(t) - Math.sin(2 * t));
-          break;
-
-        case "butterfly":
-          x = Math.sin(t) * (Math.exp(Math.cos(t)) - 2 * Math.cos(4 * t));
-          y = Math.cos(t) * (Math.exp(Math.cos(t)) - 2 * Math.cos(4 * t));
-          break;
-
-        default:
-          x = 0;
-          y = 0;
-      }
-      points.push([x, y]);
-    }
+    const yFunc = (x: number) => evaluateEquation(curveName, parameters, x);
+    const isSymmetricCurve = ["circle", "ellipse", "hyperbola"].includes(curveName.toLowerCase());
 
     return (
-      <Plot.Parametric
-        xy={(t) => points[Math.floor(t * points.length)]}
-        t={[0, 1]}
-      />
+      <>
+        <Plot.OfX y={yFunc} />
+        {isSymmetricCurve && <Plot.OfX y={(x) => -yFunc(x)} />}
+      </>
     );
-  };
-
-  // Add polar curve handling
-  const renderPolarCurve = () => {
-    if (
-      !["lemniscate", "rose", "maltese cross"].includes(curveName.toLowerCase())
-    ) {
-      return null;
-    }
-
-    const points: [number, number][] = [];
-    const numPoints = 100;
-
-    for (let i = 0; i <= numPoints; i++) {
-      const theta = (i / numPoints) * Math.PI * 2;
-      let r;
-
-      switch (curveName.toLowerCase()) {
-        case "lemniscate":
-          r = parameters.a * Math.sqrt(Math.abs(Math.cos(2 * theta)));
-          break;
-
-        case "rose":
-          r = parameters.a * Math.cos(parameters.b * theta);
-          break;
-
-        case "maltese cross":
-          r = parameters.a * Math.sqrt(Math.abs(Math.cos(2 * theta)));
-          break;
-
-        default:
-          r = 0;
-      }
-
-      const x = r * Math.cos(theta);
-      const y = r * Math.sin(theta);
-      points.push([x, y]);
-    }
-
-    return (
-      <Plot.Parametric
-        xy={(t) => points[Math.floor(t * points.length)]}
-        t={[0, 1]}
-      />
-    );
-  };
-
-  const getParameterDescriptions = () => {
-    switch (curveName.toLowerCase()) {
-      case "line":
-        return {
-          a: "Adjust slope",
-          b: "Move up/down",
-        };
-      case "parabola":
-        return {
-          a: "Change curve width",
-          b: "Move left/right",
-          c: "Move up/down",
-        };
-      case "circle":
-        return {
-          a: "Adjust radius",
-        };
-      case "sine curve":
-        return {
-          a: "Change height",
-          b: "Adjust frequency",
-          c: "Shift phase",
-        };
-      // Add more descriptions for other curves
-      default:
-        return Object.fromEntries(
-          Object.keys(parameters).map((param) => [param, `Adjust ${param}`])
-        );
-    }
-  };
+  }
 
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full h-[800px]">
+      {/* Graph Container */}
       <div id="graph-container" className="absolute inset-0 bg-white">
         <Mafs
           width={window.innerWidth}
-          height={window.innerHeight}
+          height={800}
           viewBox={{ x: [-zoom, zoom], y: [-zoom, zoom] }}
         >
           <Coordinates.Cartesian />
-          {renderParametricCurve() || renderPolarCurve() || (
-            <>
-              <Plot.OfX y={evaluateEquation} />
-              {["circle", "ellipse", "hyperbola"].includes(
-                curveName.toLowerCase()
-              ) && <Plot.OfX y={(x) => -evaluateEquation(x)} />}
-            </>
-          )}
+          {renderParametricCurve() || renderPolarCurve() || renderCartesianCurve()}
         </Mafs>
       </div>
 
+      {/* Control Panel */}
       <ControlPanel
         title={`${curveName} Controls`}
         parameters={parameters}
         onParameterChange={(param, value) =>
           setParameters((prev) => ({ ...prev, [param]: value }))
         }
-        parameterDescriptions={getParameterDescriptions()}
+        parameterDescriptions={getParameterDescriptions(curveName, parameters)}
       />
 
-      {/* Zoom controls */}
+      {/* Zoom Controls */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2">
         <button
-          onClick={() => setZoom((prev) => Math.max(prev / 1.5, minZoom))}
+          onClick={() => setZoom((prev) => Math.max(prev / 1.5, MIN_ZOOM))}
           className="bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/70"
         >
           +
         </button>
         <button
-          onClick={() => setZoom((prev) => Math.min(prev * 1.5, maxZoom))}
+          onClick={() => setZoom((prev) => Math.min(prev * 1.5, MAX_ZOOM))}
           className="bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/70"
         >
           -
